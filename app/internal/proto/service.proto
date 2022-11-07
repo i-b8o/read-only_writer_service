@@ -1,0 +1,16 @@
+
+syntax = "proto3";
+
+option go_package = "./;pb";
+
+import "messages.proto";
+
+service WritableRegulationGRPC {
+    rpc CreateRegulation(Regulation) returns (ID) {};
+    rpc DeleteRegulation(ID) returns (Status) {};
+    rpc CreateChapter(Chapter) returns (ID) {};
+    rpc DeleteChaptersForRegulation(ID) returns (Status) {};
+    rpc CreateAllParagraphs(Paragraphs) returns (Status) {};
+    rpc UpdateOneParagraph(UpdateOneRequestMesssage) returns (Status) {};
+    rpc DeleteParagraphsForChapter(ID) returns (Status) {};
+}
