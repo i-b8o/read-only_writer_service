@@ -6,10 +6,11 @@ import (
 	"net"
 	postgressql "regulations_writable_service/internal/adapters/db/postgresql"
 	"regulations_writable_service/internal/config"
-	"regulations_writable_service/internal/pb"
 	"regulations_writable_service/internal/service"
 	"regulations_writable_service/pkg/client/postgresql"
 	"time"
+
+	"github.com/i-b8o/regulations_contracts/pb"
 
 	"github.com/i-b8o/logging"
 	"google.golang.org/grpc"

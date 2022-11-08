@@ -3,8 +3,9 @@ package postgressql
 import (
 	"context"
 	"fmt"
-	"regulations_writable_service/internal/pb"
 	client "regulations_writable_service/pkg/client/postgresql"
+
+	"github.com/i-b8o/regulations_contracts/pb"
 )
 
 type paragraphStorage struct {
@@ -16,7 +17,7 @@ func NewParagraphStorage(client client.PostgreSQLClient) *paragraphStorage {
 }
 
 // CreateAll
-func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.Paragraph) error {
+func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.WritableParagraph) error {
 	vals := []interface{}{}
 	sql := `INSERT INTO paragraphs ("paragraph_id","order_num","is_table","is_nft","has_links","class","content","c_id") VALUES `
 	i := 1

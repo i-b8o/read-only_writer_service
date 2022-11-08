@@ -2,9 +2,10 @@ package postgressql
 
 import (
 	"context"
-	"regulations_writable_service/internal/pb"
 	client "regulations_writable_service/pkg/client/postgresql"
 	"time"
+
+	"github.com/i-b8o/regulations_contracts/pb"
 )
 
 type regulationStorage struct {
@@ -16,7 +17,7 @@ func NewRegulationStorage(client client.PostgreSQLClient) *regulationStorage {
 }
 
 // Create returns the ID of the inserted chapter
-func (rs *regulationStorage) Create(ctx context.Context, regulation *pb.Regulation) (uint64, error) {
+func (rs *regulationStorage) Create(ctx context.Context, regulation *pb.CreateRegulationRequest) (uint64, error) {
 	t := time.Now()
 
 	const sql = `INSERT INTO regulations ("name", "abbreviation", "title", "created_at") VALUES ($1, $2, $3, $4) RETURNING "id"`
