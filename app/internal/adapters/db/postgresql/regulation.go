@@ -2,10 +2,13 @@ package postgressql
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	client "regulations_writable_service/pkg/client/postgresql"
 	"time"
 
 	"github.com/i-b8o/regulations_contracts/pb"
+	"github.com/jackc/pgconn"
 )
 
 type regulationStorage struct {
@@ -26,6 +29,10 @@ func (rs *regulationStorage) Create(ctx context.Context, regulation *pb.CreateRe
 	var regulationID uint64
 
 	err := row.Scan(&regulationID)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return regulationID, fmt.Errorf("message: %s, code: %s", pgErr.Message, pgErr.Code)
+	}
 
 	return regulationID, err
 }
@@ -34,6 +41,10 @@ func (rs *regulationStorage) Create(ctx context.Context, regulation *pb.CreateRe
 func (rs *regulationStorage) Delete(ctx context.Context, regulationID uint64) error {
 	sql := `delete from regulations where id=$1`
 	_, err := rs.client.Exec(ctx, sql, regulationID)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return fmt.Errorf("message: %s, code: %s", pgErr.Message, pgErr.Code)
+	}
 
 	return err
 }

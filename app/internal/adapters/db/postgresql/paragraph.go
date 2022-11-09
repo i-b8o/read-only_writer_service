@@ -2,10 +2,12 @@ package postgressql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	client "regulations_writable_service/pkg/client/postgresql"
 
 	"github.com/i-b8o/regulations_contracts/pb"
+	"github.com/jackc/pgconn"
 )
 
 type paragraphStorage struct {
@@ -29,6 +31,11 @@ func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.Writ
 	sql = sql[:len(sql)-1]
 
 	if _, err := ps.client.Exec(ctx, sql, vals...); err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			return fmt.Errorf("message: %s, code: %s", pgErr.Message, pgErr.Code)
+		}
+
 		return err
 	}
 
@@ -42,6 +49,11 @@ func (ps *paragraphStorage) UpdateOne(ctx context.Context, content string, parag
 
 	err := row.Scan(&ID)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			return fmt.Errorf("message: %s, code: %s", pgErr.Message, pgErr.Code)
+		}
+
 		return err
 	}
 
@@ -52,5 +64,10 @@ func (ps *paragraphStorage) UpdateOne(ctx context.Context, content string, parag
 func (ps *paragraphStorage) DeleteForChapter(ctx context.Context, chapterID uint64) error {
 	sql := `delete from paragraphs where c_id=$1`
 	_, err := ps.client.Exec(ctx, sql, chapterID)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return fmt.Errorf("message: %s, code: %s", pgErr.Message, pgErr.Code)
+	}
+
 	return err
 }
