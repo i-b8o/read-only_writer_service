@@ -6,7 +6,7 @@ import (
 	"fmt"
 	client "regulations_writable_service/pkg/client/postgresql"
 
-	"github.com/i-b8o/regulations_contracts/pb"
+	pb "github.com/i-b8o/regulations_contracts/pb/writable/v1"
 	"github.com/jackc/pgconn"
 )
 
@@ -45,4 +45,44 @@ func (cs *chapterStorage) DeleteAllForRegulation(ctx context.Context, regulation
 	}
 
 	return err
+}
+
+// GetAllById returns all chapters associated with the given ID
+func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) ([]*pb.WritableChapter, error) {
+	const sql = `SELECT id,name,num,order_num FROM "chapters" WHERE r_id = $1 ORDER BY order_num`
+
+	var chapters []*pb.WritableChapter
+
+	rows, err := cs.client.Query(ctx, sql, regulationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		chapter := pb.WritableChapter{}
+		if err = rows.Scan(
+			&chapter.ID, &chapter.Name, &chapter.Num, &chapter.OrderNum,
+		); err != nil {
+			return nil, err
+		}
+
+		chapters = append(chapters, &chapter)
+	}
+
+	return chapters, nil
+
+}
+
+// GetOneById returns an chapter associated with the given ID
+func (cs *chapterStorage) GetRegulationId(ctx context.Context, chapterID uint64) (uint64, error) {
+	const sql = `SELECT r_id FROM "chapters" WHERE id = $1`
+	row := cs.client.QueryRow(ctx, sql, chapterID)
+	var ID uint64
+	err := row.Scan(&ID)
+	if err != nil {
+		return ID, err
+	}
+
+	return ID, nil
 }

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	client "regulations_writable_service/pkg/client/postgresql"
 
-	"github.com/i-b8o/regulations_contracts/pb"
+	pb "github.com/i-b8o/regulations_contracts/pb/writable/v1"
 	"github.com/jackc/pgconn"
 )
 
@@ -70,4 +70,31 @@ func (ps *paragraphStorage) DeleteForChapter(ctx context.Context, chapterID uint
 	}
 
 	return err
+}
+
+func (ps *paragraphStorage) GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WritableParagraph, error) {
+	const sql = `SELECT paragraph_id, content FROM "paragraphs" WHERE c_id = $1 AND has_links=true`
+
+	var paragraphs []*pb.WritableParagraph
+
+	rows, err := ps.client.Query(ctx, sql, chapterID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		paragraph := pb.WritableParagraph{}
+		if err = rows.Scan(
+			&paragraph.ID, &paragraph.Content,
+		); err != nil {
+			return nil, err
+		}
+
+		paragraphs = append(paragraphs, &paragraph)
+	}
+
+	return paragraphs, nil
+
 }
