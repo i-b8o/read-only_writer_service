@@ -10,9 +10,8 @@ import (
 	"regulations_writable_service/pkg/client/postgresql"
 	"time"
 
-	"github.com/i-b8o/regulations_contracts/pb"
-
 	"github.com/i-b8o/logging"
+	pb_writable "github.com/i-b8o/regulations_contracts/pb/writable/v1"
 	"google.golang.org/grpc"
 )
 
@@ -74,7 +73,7 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 
 	// grpcServer := grpc.NewServer(grpc.Creds(tlsCredentials))
 	grpcServer := grpc.NewServer()
-	pb.RegisterWritableRegulationGRPCServer(grpcServer, regulationGrpcService)
+	pb_writable.RegisterWritableRegulationGRPCServer(grpcServer, regulationGrpcService)
 
 	return App{cfg: config, grpcServer: grpcServer}, nil
 }
