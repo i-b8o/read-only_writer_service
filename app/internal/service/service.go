@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	pb "github.com/i-b8o/regulations_contracts/pb/writable/v1"
 
@@ -52,13 +51,10 @@ func (s *WritableRegulationGRPCServce) CreateRegulation(ctx context.Context, req
 	}
 	return &pb.CreateRegulationResponse{ID: id}, nil
 }
-func (s *WritableRegulationGRPCServce) DeleteRegulation(ctx context.Context, req *pb.DeleteRegulationRequest) (*pb.DeleteRegulationResponse, error) {
+func (s *WritableRegulationGRPCServce) DeleteRegulation(ctx context.Context, req *pb.DeleteRegulationRequest) (*pb.Empty, error) {
 	ID := req.GetID()
 	err := s.regulationStorage.Delete(ctx, ID)
-	if err != nil {
-		return &pb.DeleteRegulationResponse{Status: fmt.Sprintf("could not delete the regulation %d", ID)}, err
-	}
-	return &pb.DeleteRegulationResponse{Status: fmt.Sprintf("regulation %d deleted", ID)}, nil
+	return &pb.Empty{}, err
 }
 func (s *WritableRegulationGRPCServce) CreateChapter(ctx context.Context, req *pb.CreateChapterRequest) (*pb.CreateChapterResponse, error) {
 	ID, err := s.chapterStorage.Create(ctx, req)
@@ -77,39 +73,27 @@ func (s *WritableRegulationGRPCServce) GetAllChapters(ctx context.Context, req *
 	return &pb.GetAllChaptersResponse{Chapters: chapters}, nil
 
 }
-func (s *WritableRegulationGRPCServce) DeleteChaptersForRegulation(ctx context.Context, req *pb.DeleteChaptersForRegulationRequest) (*pb.DeleteChaptersForRegulationResponse, error) {
+func (s *WritableRegulationGRPCServce) DeleteChaptersForRegulation(ctx context.Context, req *pb.DeleteChaptersForRegulationRequest) (*pb.Empty, error) {
 	ID := req.GetID()
 	err := s.chapterStorage.DeleteAllForRegulation(ctx, ID)
-	if err != nil {
-		return &pb.DeleteChaptersForRegulationResponse{Status: fmt.Sprintf("could not delete chapters for the regulation %d", ID)}, err
-	}
-	return &pb.DeleteChaptersForRegulationResponse{Status: fmt.Sprintf("chapters for the regulation %d deleted", ID)}, nil
+	return &pb.Empty{}, err
 }
-func (s *WritableRegulationGRPCServce) CreateAllParagraphs(ctx context.Context, req *pb.CreateAllParagraphsRequest) (*pb.CreateAllParagraphsResponse, error) {
+func (s *WritableRegulationGRPCServce) CreateAllParagraphs(ctx context.Context, req *pb.CreateAllParagraphsRequest) (*pb.Empty, error) {
 	paragraphs := req.GetParagraphs()
 	err := s.paragraphStorage.CreateAll(ctx, paragraphs)
-	if err != nil {
-		return &pb.CreateAllParagraphsResponse{Status: fmt.Sprintf("could not create paragraphs for the chapter %d", paragraphs[0].ChapterID)}, err
-	}
-	return &pb.CreateAllParagraphsResponse{Status: fmt.Sprintf("paragraphs for the chapter %d created", paragraphs[0].ChapterID)}, nil
+	return &pb.Empty{}, err
 }
-func (s *WritableRegulationGRPCServce) UpdateOneParagraph(ctx context.Context, req *pb.UpdateOneParagraphRequest) (*pb.UpdateOneParagraphResponse, error) {
+func (s *WritableRegulationGRPCServce) UpdateOneParagraph(ctx context.Context, req *pb.UpdateOneParagraphRequest) (*pb.Empty, error) {
 	ID := req.GetID()
 	content := req.GetContent()
 	err := s.paragraphStorage.UpdateOne(ctx, content, ID)
-	if err != nil {
-		return &pb.UpdateOneParagraphResponse{Status: fmt.Sprintf("could not update paragraph %d", ID)}, err
-	}
-	return &pb.UpdateOneParagraphResponse{Status: fmt.Sprintf("paragraph %d updated", ID)}, nil
+	return &pb.Empty{}, err
+
 }
-func (s *WritableRegulationGRPCServce) DeleteParagraphsForChapter(ctx context.Context, req *pb.DeleteParagraphsForChapterRequest) (*pb.DeleteParagraphsForChapterResponse, error) {
+func (s *WritableRegulationGRPCServce) DeleteParagraphsForChapter(ctx context.Context, req *pb.DeleteParagraphsForChapterRequest) (*pb.Empty, error) {
 	ID := req.GetID()
 	err := s.paragraphStorage.DeleteForChapter(ctx, ID)
-	if err != nil {
-		return &pb.DeleteParagraphsForChapterResponse{Status: fmt.Sprintf("could not delete paragraph %d", ID)}, err
-	}
-	return &pb.DeleteParagraphsForChapterResponse{Status: fmt.Sprintf("paragraph %d deleted", ID)}, nil
-
+	return &pb.Empty{}, err
 }
 
 func (s *WritableRegulationGRPCServce) GetParagraphsWithHrefs(ctx context.Context, req *pb.GetParagraphsWithHrefsRequest) (*pb.GetParagraphsWithHrefsResponse, error) {
