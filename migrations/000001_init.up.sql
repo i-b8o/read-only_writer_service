@@ -1,11 +1,3 @@
--- TABLES --
-DROP MATERIALIZED VIEW IF EXISTS reg_search;
-DROP INDEX IF EXISTS idx_search;
-DROP TABLE IF EXISTS paragraphs;
-DROP TABLE IF EXISTS chapters;
-DROP TABLE IF EXISTS regulations;
-
-
 CREATE TABLE regulations (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL CHECK (NAME != '') UNIQUE,
