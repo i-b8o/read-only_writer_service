@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	client "regulations_writable_service/pkg/client/postgresql"
+	client "read-only_writer_service/pkg/client/postgresql"
 
 	pb "github.com/i-b8o/regulations_contracts/pb/writable/v1"
 	"github.com/jackc/pgconn"

@@ -1,4 +1,4 @@
-module regulations_writable_service
+module read-only_writer_service
 
 go 1.19
 

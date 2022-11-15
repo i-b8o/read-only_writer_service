@@ -17,8 +17,8 @@ type Config struct {
 		ChatID         string `env:"TELEGRAM_CHAT_ID" env-required:"true"`
 	}
 	GRPC struct {
-		IP   string `env:"regulations_writable_service_IP" env-default:"0.0.0.0"`
-		Port string `env:"regulations_writable_service_PORT" env-default:"20000"`
+		IP   string `env:"read-only_writer_service_IP" env-default:"0.0.0.0"`
+		Port string `env:"read-only_writer_service_PORT" env-default:"20000"`
 	}
 	// TODO upgrade env variables for the user with only select permission
 	PostgreSQL struct {
