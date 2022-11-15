@@ -7,7 +7,7 @@ import (
 	client "read-only_writer_service/pkg/client/postgresql"
 	"time"
 
-	pb_writable "github.com/i-b8o/regulations_contracts/pb/writable/v1"
+	pb_writable "github.com/i-b8o/regulations_contracts/pb/writer/v1"
 	"github.com/jackc/pgconn"
 )
 

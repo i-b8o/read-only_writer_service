@@ -6,7 +6,7 @@ import (
 	"fmt"
 	client "read-only_writer_service/pkg/client/postgresql"
 
-	pb "github.com/i-b8o/regulations_contracts/pb/writable/v1"
+	pb "github.com/i-b8o/regulations_contracts/pb/writer/v1"
 	"github.com/jackc/pgconn"
 )
 
@@ -19,7 +19,7 @@ func NewParagraphStorage(client client.PostgreSQLClient) *paragraphStorage {
 }
 
 // CreateAll
-func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.WritableParagraph) error {
+func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error {
 	vals := []interface{}{}
 	sql := `INSERT INTO paragraphs ("paragraph_id","order_num","is_table","is_nft","has_links","class","content","c_id") VALUES `
 	i := 1
@@ -72,10 +72,10 @@ func (ps *paragraphStorage) DeleteForChapter(ctx context.Context, chapterID uint
 	return err
 }
 
-func (ps *paragraphStorage) GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WritableParagraph, error) {
+func (ps *paragraphStorage) GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error) {
 	const sql = `SELECT paragraph_id, content FROM "paragraphs" WHERE c_id = $1 AND has_links=true`
 
-	var paragraphs []*pb.WritableParagraph
+	var paragraphs []*pb.WriterParagraph
 
 	rows, err := ps.client.Query(ctx, sql, chapterID)
 	if err != nil {
@@ -85,7 +85,7 @@ func (ps *paragraphStorage) GetWithHrefs(ctx context.Context, chapterID uint64) 
 	defer rows.Close()
 
 	for rows.Next() {
-		paragraph := pb.WritableParagraph{}
+		paragraph := pb.WriterParagraph{}
 		if err = rows.Scan(
 			&paragraph.ID, &paragraph.Content,
 		); err != nil {

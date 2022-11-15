@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	pb "github.com/i-b8o/regulations_contracts/pb/writable/v1"
+	pb "github.com/i-b8o/regulations_contracts/pb/writer/v1"
 
 	"github.com/i-b8o/logging"
 )
@@ -16,15 +16,15 @@ type RegulationStorage interface {
 type ChapterStorage interface {
 	Create(ctx context.Context, chapter *pb.CreateChapterRequest) (uint64, error)
 	DeleteAllForRegulation(ctx context.Context, regulationID uint64) error
-	GetAllById(ctx context.Context, regulationID uint64) ([]*pb.WritableChapter, error)
+	GetAllById(ctx context.Context, regulationID uint64) ([]*pb.WriterChapter, error)
 	GetRegulationId(ctx context.Context, chapterID uint64) (uint64, error)
 }
 
 type ParagraphStorage interface {
-	CreateAll(ctx context.Context, paragraphs []*pb.WritableParagraph) error
+	CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error
 	UpdateOne(ctx context.Context, content string, paragraphID uint64) error
 	DeleteForChapter(ctx context.Context, chapterID uint64) error
-	GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WritableParagraph, error)
+	GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error)
 }
 
 type WritableRegulationGRPCServce struct {
@@ -32,7 +32,7 @@ type WritableRegulationGRPCServce struct {
 	chapterStorage    ChapterStorage
 	paragraphStorage  ParagraphStorage
 	logging           logging.Logger
-	pb.UnimplementedWritableRegulationGRPCServer
+	pb.UnimplementedWriterGRPCServer
 }
 
 func NewWritableRegulationGRPCService(regulationStorage RegulationStorage, chapterStorage ChapterStorage, paragraphStorage ParagraphStorage, loging logging.Logger) *WritableRegulationGRPCServce {

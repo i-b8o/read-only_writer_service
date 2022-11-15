@@ -6,7 +6,7 @@ import (
 	"fmt"
 	client "read-only_writer_service/pkg/client/postgresql"
 
-	pb "github.com/i-b8o/regulations_contracts/pb/writable/v1"
+	pb "github.com/i-b8o/regulations_contracts/pb/writer/v1"
 	"github.com/jackc/pgconn"
 )
 
@@ -48,10 +48,10 @@ func (cs *chapterStorage) DeleteAllForRegulation(ctx context.Context, regulation
 }
 
 // GetAllById returns all chapters associated with the given ID
-func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) ([]*pb.WritableChapter, error) {
+func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) ([]*pb.WriterChapter, error) {
 	const sql = `SELECT id,name,num,order_num FROM "chapters" WHERE r_id = $1 ORDER BY order_num`
 
-	var chapters []*pb.WritableChapter
+	var chapters []*pb.WriterChapter
 
 	rows, err := cs.client.Query(ctx, sql, regulationID)
 	if err != nil {
@@ -60,7 +60,7 @@ func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) (
 	defer rows.Close()
 
 	for rows.Next() {
-		chapter := pb.WritableChapter{}
+		chapter := pb.WriterChapter{}
 		if err = rows.Scan(
 			&chapter.ID, &chapter.Name, &chapter.Num, &chapter.OrderNum,
 		); err != nil {
