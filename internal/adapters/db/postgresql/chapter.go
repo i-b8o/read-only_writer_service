@@ -20,7 +20,7 @@ func NewChapterStorage(client client.PostgreSQLClient) *chapterStorage {
 
 // Create returns the ID of the inserted chapter
 func (cs *chapterStorage) Create(ctx context.Context, chapter *pb.CreateChapterRequest) (uint64, error) {
-	sql := `INSERT INTO chapters ("name", "num", "order_num","r_id") VALUES ($1,$2,$3,$4) RETURNING "id"`
+	sql := `INSERT INTO chapter ("name", "num", "order_num","r_id") VALUES ($1,$2,$3,$4) RETURNING "id"`
 
 	row := cs.client.QueryRow(ctx, sql, chapter.Name, chapter.Num, chapter.OrderNum, chapter.RegulationID)
 
@@ -37,7 +37,7 @@ func (cs *chapterStorage) Create(ctx context.Context, chapter *pb.CreateChapterR
 
 // Delete
 func (cs *chapterStorage) DeleteAllForRegulation(ctx context.Context, regulationID uint64) error {
-	const sql1 = `delete from chapters where r_id=$1`
+	const sql1 = `delete from chapter where r_id=$1`
 	_, err := cs.client.Exec(ctx, sql1, regulationID)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
@@ -47,9 +47,9 @@ func (cs *chapterStorage) DeleteAllForRegulation(ctx context.Context, regulation
 	return err
 }
 
-// GetAllById returns all chapters associated with the given ID
+// GetAllById returns all chapter associated with the given ID
 func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) ([]*pb.WriterChapter, error) {
-	const sql = `SELECT id,name,num,order_num FROM "chapters" WHERE r_id = $1 ORDER BY order_num`
+	const sql = `SELECT id,name,num,order_num FROM "chapter" WHERE r_id = $1 ORDER BY order_num`
 
 	var chapters []*pb.WriterChapter
 
@@ -76,7 +76,7 @@ func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) (
 
 // GetOneById returns an chapter associated with the given ID
 func (cs *chapterStorage) GetRegulationId(ctx context.Context, chapterID uint64) (uint64, error) {
-	const sql = `SELECT r_id FROM "chapters" WHERE id = $1`
+	const sql = `SELECT r_id FROM "chapter" WHERE id = $1`
 	row := cs.client.QueryRow(ctx, sql, chapterID)
 	var ID uint64
 	err := row.Scan(&ID)

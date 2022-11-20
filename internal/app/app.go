@@ -6,7 +6,7 @@ import (
 	"net"
 	postgressql "read-only_writer_service/internal/adapters/db/postgresql"
 	"read-only_writer_service/internal/config"
-	"read-only_writer_service/internal/service"
+	"read-only_writer_service/internal/controller"
 	"read-only_writer_service/pkg/client/postgresql"
 	"time"
 
@@ -18,14 +18,15 @@ import (
 type App struct {
 	cfg        *config.Config
 	grpcServer *grpc.Server
+	logger     logging.Logger
 }
 
 func NewApp(ctx context.Context, config *config.Config) (App, error) {
-	logger := logging.GetLogger(config.Logger.LogLevel)
+	logger := logging.GetLogger(config.AppConfig.LogLevel)
 
 	logger.Print("Postgres initializing")
 	pgConfig := postgresql.NewPgConfig(
-		config.PostgreSQL.PostgreUsername, config.PostgreSQL.Password,
+		config.PostgreSQL.Username, config.PostgreSQL.Password,
 		config.PostgreSQL.Host, config.PostgreSQL.Port, config.PostgreSQL.Database,
 	)
 
@@ -37,7 +38,7 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	paragraphAdapter := postgressql.NewParagraphStorage(pgClient)
 	regAdapter := postgressql.NewRegulationStorage(pgClient)
 
-	regulationGrpcService := service.NewWritableRegulationGRPCService(regAdapter, chapterAdapter, paragraphAdapter, logger)
+	regulationGrpcService := controller.NewWritableRegulationGRPCService(regAdapter, chapterAdapter, paragraphAdapter, logger)
 
 	// read ca's cert, verify to client's certificate
 	// homeDir, err := os.UserHomeDir()
@@ -75,15 +76,16 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	grpcServer := grpc.NewServer()
 	pb_writable.RegisterWriterGRPCServer(grpcServer, regulationGrpcService)
 
-	return App{cfg: config, grpcServer: grpcServer}, nil
+	return App{cfg: config, grpcServer: grpcServer, logger: logger}, nil
 }
 
 func (a *App) Run(ctx context.Context) error {
-	address := fmt.Sprintf("%s:%s", a.cfg.GRPC.IP, a.cfg.GRPC.Port)
+	address := fmt.Sprintf("%s:%d", a.cfg.GRPC.IP, a.cfg.GRPC.Port)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		return err
 	}
+	a.logger.Printf("started server on %s", address)
 	return a.grpcServer.Serve(listener)
 
 }

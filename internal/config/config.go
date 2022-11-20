@@ -1,62 +1,63 @@
 package config
 
 import (
+	"flag"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
-	IsDebug       bool `env:"IS_DEBUG" env-default:"false"`
-	IsDevelopment bool `env:"IS_DEV" env-default:"false"`
-	Logger        struct {
-		LogLevel       string `env:"LOG_LEVEL" env-default:"trace"`
-		LoggerUsername string `env:"TELEGRAM_USERNAME" env-required:"true"`
-		Token          string `env:"TELEGRAM_TOKEN" env-env-required:"true"`
-		ChatID         string `env:"TELEGRAM_CHAT_ID" env-required:"true"`
-	}
 	GRPC struct {
-		IP   string `env:"read-only_writer_service_IP" env-default:"0.0.0.0"`
-		Port string `env:"read-only_writer_service_PORT" env-default:"20000"`
-	}
-	// TODO upgrade env variables for the user with only select permission
+		IP   string `yaml:"ip" env:"GRPC-IP"`
+		Port int    `yaml:"port" env:"GRPC-PORT"`
+	} `yaml:"grpc"`
+	AppConfig struct {
+		LogLevel string `yaml:"log-level" env:"LOG_LEVEL" env-default:"trace"`
+	} `yaml:"app"`
 	PostgreSQL struct {
-		PostgreUsername string `env:"PSQL_USERNAME_REG" env-required:"true"`
-		Password        string `env:"PSQL_PASSWORD_REG" env-required:"true"`
-		Host            string `env:"PSQL_HOST_REG" env-required:"true"`
-		Port            string `env:"PSQL_PORT_REG" env-required:"true"`
-		Database        string `env:"PSQL_DATABASE_REG" env-required:"true"`
-	}
+		Username string `yaml:"username" env:"POSTGRES_USER" env-required:"true"`
+		Password string `yaml:"password" env:"POSTGRES_PASSWORD" env-required:"true"`
+		Host     string `yaml:"host" env:"POSTGRES_HOST" env-required:"true"`
+		Port     string `yaml:"port" env:"POSTGRES_PORT" env-required:"true"`
+		Database string `yaml:"database" env:"POSTGRES_DB" env-required:"true"`
+	} `yaml:"postgresql"`
 }
 
-// Singleton: Config should only ever be created once
-var instance *Config
+const (
+	EnvConfigPathName  = "CONFIG-PATH"
+	FlagConfigPathName = "config"
+)
 
-// Once is an object that will perform exactly one action.
+var configPath string
+var instance *Config
 var once sync.Once
 
-// GetConfig returns pointer to Config
 func GetConfig() *Config {
-	// Calls the function if and only if Do is being called for the first time for this instance of Once
 	once.Do(func() {
-		log.Print("collecting config...")
+		flag.StringVar(&configPath, FlagConfigPathName, "configs/config.local.yaml", "this is app config file")
+		flag.Parse()
 
-		// Config initialization
+		log.Print("config init")
+
+		if configPath == "" {
+			configPath = os.Getenv(EnvConfigPathName)
+		}
+
+		if configPath == "" {
+			log.Fatal("config path is required")
+		}
+
 		instance = &Config{}
 
-		// Read environment variables into the instance of the Config
-		if err := cleanenv.ReadEnv(instance); err != nil {
-			// If something is wrong
-			helpText := "Environment variables error:"
-			// Returns a description of environment variables with a custom header - helpText
-			help, err := cleanenv.GetDescription(instance, &helpText)
-			if err != nil {
-				log.Fatal(err)
-			}
-			log.Print(help)
-			log.Printf("%+v\n", instance)
+		instance.PostgreSQL.Password = os.Getenv("DB_PASSWORD")
 
+		if err := cleanenv.ReadConfig(configPath, instance); err != nil {
+			helpText := "Read Only"
+			help, _ := cleanenv.GetDescription(instance, &helpText)
+			log.Print(help)
 			log.Fatal(err)
 		}
 	})

@@ -21,7 +21,7 @@ func NewParagraphStorage(client client.PostgreSQLClient) *paragraphStorage {
 // CreateAll
 func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error {
 	vals := []interface{}{}
-	sql := `INSERT INTO paragraphs ("paragraph_id","order_num","is_table","is_nft","has_links","class","content","c_id") VALUES `
+	sql := `INSERT INTO paragraph ("paragraph_id","order_num","is_table","is_nft","has_links","class","content","c_id") VALUES `
 	i := 1
 	for _, p := range paragraphs {
 		sql += fmt.Sprintf("($%d, $%d, $%d , $%d, $%d, $%d, $%d, $%d),", i, i+1, i+2, i+3, i+4, i+5, i+6, i+7)
@@ -43,7 +43,7 @@ func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.Writ
 }
 
 func (ps *paragraphStorage) UpdateOne(ctx context.Context, content string, paragraphID uint64) error {
-	sql := `UPDATE "paragraphs" SET content = $1 WHERE paragraph_id = $2 RETURNING "id"`
+	sql := `UPDATE "paragraph" SET content = $1 WHERE paragraph_id = $2 RETURNING "id"`
 	row := ps.client.QueryRow(ctx, sql, content, paragraphID)
 	var ID uint64
 
@@ -62,7 +62,7 @@ func (ps *paragraphStorage) UpdateOne(ctx context.Context, content string, parag
 
 // Delete
 func (ps *paragraphStorage) DeleteForChapter(ctx context.Context, chapterID uint64) error {
-	sql := `delete from paragraphs where c_id=$1`
+	sql := `delete from paragraph where c_id=$1`
 	_, err := ps.client.Exec(ctx, sql, chapterID)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
@@ -73,7 +73,7 @@ func (ps *paragraphStorage) DeleteForChapter(ctx context.Context, chapterID uint
 }
 
 func (ps *paragraphStorage) GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error) {
-	const sql = `SELECT paragraph_id, content FROM "paragraphs" WHERE c_id = $1 AND has_links=true`
+	const sql = `SELECT paragraph_id, content FROM "paragraph" WHERE c_id = $1 AND has_links=true`
 
 	var paragraphs []*pb.WriterParagraph
 
