@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/i-b8o/regulations_contracts/pb/writer/v1"
+	pb "github.com/i-b8o/read-only_contracts/pb/writer/v1"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
@@ -101,8 +101,6 @@ func TestCreateRegulation(t *testing.T) {
 
 func TestDeleteRegulation(t *testing.T) {
 	assert := assert.New(t)
-	pgClient := setupDB()
-	defer pgClient.Close()
 	conn, err := grpc.Dial(
 		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -110,6 +108,10 @@ func TestDeleteRegulation(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	pgClient := setupDB()
+	defer pgClient.Close()
+
 	client := pb.NewWriterGRPCClient(conn)
 	defer conn.Close()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -120,31 +122,19 @@ func TestDeleteRegulation(t *testing.T) {
 		err   error
 	}{
 		{
-			input: &pb.DeleteRegulationRequest{ID: 2},
+			input: &pb.DeleteRegulationRequest{ID: 1},
 			err:   nil,
 		},
 	}
 
 	for _, test := range tests {
-		now := time.Now()
-
-		const sql = `INSERT INTO regulation ("name", "abbreviation", "title", "created_at") VALUES ($1, $2, $3, $4) RETURNING "id"`
-
-		row := pgClient.QueryRow(ctx, sql, "name", "abb", "title", now)
-		var regulationID uint64
-
-		err = row.Scan(&regulationID)
-		if err != nil {
-			t.Log(err)
-		}
-
-		_, err = client.DeleteRegulation(ctx, test.input)
+		_, err := client.DeleteRegulation(ctx, test.input)
 		if err != nil {
 			t.Log(err)
 		}
 		assert.Equal(test.err, err, err)
-		sql1 := "select id, name, abbreviation from regulation where name='name'"
-		rows, err := pgClient.Query(ctx, sql1)
+		sql := fmt.Sprintf("select id from chapter where id=%d", test.input.ID)
+		rows, err := pgClient.Query(ctx, sql)
 		if err != nil {
 			t.Log(err)
 		}
@@ -162,7 +152,6 @@ func TestDeleteRegulation(t *testing.T) {
 		}
 		assert.True(id == 0, "returned id %d", id)
 	}
-
 	_, err = pgClient.Exec(ctx, resetDB)
 	if err != nil {
 		t.Log(err)
@@ -212,7 +201,7 @@ func TestCreateChapter(t *testing.T) {
 	}
 }
 
-func TestGetAllChapters(t *testing.T) {
+func TestGetAllChaptersIds(t *testing.T) {
 	assert := assert.New(t)
 	conn, err := grpc.Dial(
 		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
@@ -248,9 +237,10 @@ func TestGetAllChapters(t *testing.T) {
 	}
 
 }
-
-func TestDeleteChaptersForRegulation(t *testing.T) {
+func TestCreateAllParagraphs(t *testing.T) {
 	assert := assert.New(t)
+	pgClient := setupDB()
+	defer pgClient.Close()
 	conn, err := grpc.Dial(
 		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -258,50 +248,30 @@ func TestDeleteChaptersForRegulation(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	pgClient := setupDB()
-	defer pgClient.Close()
-
 	client := pb.NewWriterGRPCClient(conn)
 	defer conn.Close()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	tests := []struct {
-		input *pb.DeleteChaptersForRegulationRequest
+		input *pb.CreateAllParagraphsRequest
 		err   error
 	}{
 		{
-			input: &pb.DeleteChaptersForRegulationRequest{ID: 1},
+			input: &pb.CreateAllParagraphsRequest{},
 			err:   nil,
 		},
 	}
 
 	for _, test := range tests {
-		_, err := client.DeleteChaptersForRegulation(ctx, test.input)
+		resp, err := client.CreateAllParagraphs(ctx, test.input)
 		if err != nil {
 			t.Log(err)
 		}
+		assert.True(proto.Equal(test.expected, resp), fmt.Sprintf("CreateChapter(%v)=%v want: %v", test.input, resp, test.expected))
 		assert.Equal(test.err, err, err)
-		sql := fmt.Sprintf("select id from chapter where id=%d", test.input.ID)
-		rows, err := pgClient.Query(ctx, sql)
-		if err != nil {
-			t.Log(err)
-		}
-		defer rows.Close()
-
-		var id uint64
-		var name, abbreviation string
-		for rows.Next() {
-			if err = rows.Scan(
-				&id, &name, &abbreviation,
-			); err != nil {
-				t.Log(err)
-			}
-			t.Log(id, name, abbreviation)
-		}
-		assert.True(id == 0, "returned id %d", id)
 	}
+
 	_, err = pgClient.Exec(ctx, resetDB)
 	if err != nil {
 		t.Log(err)

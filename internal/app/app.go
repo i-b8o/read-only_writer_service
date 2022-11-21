@@ -46,8 +46,8 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	chapterService := service.NewChapterService(chapterAdapter)
 	paragraphService := service.NewParagraphService(paragraphAdapter)
 
-	regulationUsecase := regulation_usecase.NewRegulationUsecase(regulationService)
-	chapterUsecase := chapter_usecase.NewChapterUsecase(chapterService, paragraphService)
+	regulationUsecase := regulation_usecase.NewRegulationUsecase(regulationService, chapterService, paragraphService)
+	chapterUsecase := chapter_usecase.NewChapterUsecase(chapterService)
 	paragraphUsecase := paragraph_usecase.NewParagraphUsecase(paragraphService)
 
 	regulationGrpcService := controller.NewWritableRegulationGRPCService(regulationUsecase, chapterUsecase, paragraphUsecase, logger)

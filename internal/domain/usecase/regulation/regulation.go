@@ -11,17 +11,43 @@ type RegulationService interface {
 	Delete(ctx context.Context, regulationID uint64) error
 }
 
+type ChapterService interface {
+	GetAllById(ctx context.Context, regulationID uint64) ([]uint64, error)
+	DeleteAllForRegulation(ctx context.Context, regulationID uint64) error
+}
+
+type ParagraphService interface {
+	DeleteForChapter(ctx context.Context, chapterID uint64) error
+}
+
 type regulationUsecase struct {
-	service RegulationService
+	regulationService RegulationService
+	chapterService    ChapterService
+	paragraphService  ParagraphService
 }
 
-func NewRegulationUsecase(service RegulationService) *regulationUsecase {
-	return &regulationUsecase{service: service}
+func NewRegulationUsecase(regulationService RegulationService, chapterService ChapterService, paragraphService ParagraphService) *regulationUsecase {
+	return &regulationUsecase{regulationService: regulationService, chapterService: chapterService, paragraphService: paragraphService}
 }
 
-func (s *regulationUsecase) Create(ctx context.Context, regulation *pb.CreateRegulationRequest) (uint64, error) {
-	return s.service.Create(ctx, regulation)
+func (u *regulationUsecase) Create(ctx context.Context, regulation *pb.CreateRegulationRequest) (uint64, error) {
+	return u.regulationService.Create(ctx, regulation)
 }
-func (s *regulationUsecase) Delete(ctx context.Context, regulationID uint64) error {
-	return s.service.Delete(ctx, regulationID)
+func (u *regulationUsecase) Delete(ctx context.Context, regulationID uint64) error {
+	chIDs, err := u.chapterService.GetAllById(ctx, regulationID)
+	if err != nil {
+		return err
+	}
+	for _, chID := range chIDs {
+		err := u.paragraphService.DeleteForChapter(ctx, chID)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = u.chapterService.DeleteAllForRegulation(ctx, regulationID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

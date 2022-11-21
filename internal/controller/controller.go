@@ -15,7 +15,6 @@ type RegulationUsecase interface {
 
 type ChapterUsecase interface {
 	Create(ctx context.Context, chapter *pb.CreateChapterRequest) (uint64, error)
-	DeleteAllForRegulation(ctx context.Context, regulationID uint64) error
 	GetAllById(ctx context.Context, regulationID uint64) ([]uint64, error)
 	GetRegulationId(ctx context.Context, chapterID uint64) (uint64, error)
 }
@@ -71,18 +70,14 @@ func (s *WritableRegulationGRPCServce) GetAllChaptersIds(ctx context.Context, re
 		return nil, err
 	}
 	return &pb.GetAllChaptersIdsResponse{IDs: IDs}, nil
+}
 
-}
-func (s *WritableRegulationGRPCServce) DeleteChaptersForRegulation(ctx context.Context, req *pb.DeleteChaptersForRegulationRequest) (*pb.Empty, error) {
-	ID := req.GetID()
-	err := s.chapterUsecase.DeleteAllForRegulation(ctx, ID)
-	return &pb.Empty{}, err
-}
 func (s *WritableRegulationGRPCServce) CreateAllParagraphs(ctx context.Context, req *pb.CreateAllParagraphsRequest) (*pb.Empty, error) {
 	paragraphs := req.GetParagraphs()
 	err := s.paragraphUsecase.CreateAll(ctx, paragraphs)
 	return &pb.Empty{}, err
 }
+
 func (s *WritableRegulationGRPCServce) UpdateOneParagraph(ctx context.Context, req *pb.UpdateOneParagraphRequest) (*pb.Empty, error) {
 	ID := req.GetID()
 	content := req.GetContent()
@@ -90,12 +85,6 @@ func (s *WritableRegulationGRPCServce) UpdateOneParagraph(ctx context.Context, r
 	return &pb.Empty{}, err
 
 }
-
-// func (s *WritableRegulationGRPCServce) DeleteParagraphsForChapter(ctx context.Context, req *pb.DeleteParagraphsForChapterRequest) (*pb.Empty, error) {
-// 	ID := req.GetID()
-// 	err := s.paragraphUsecase.DeleteForChapter(ctx, ID)
-// 	return &pb.Empty{}, err
-// }
 
 func (s *WritableRegulationGRPCServce) GetParagraphsWithHrefs(ctx context.Context, req *pb.GetParagraphsWithHrefsRequest) (*pb.GetParagraphsWithHrefsResponse, error) {
 	ID := req.GetID()
