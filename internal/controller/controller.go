@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	pb "github.com/i-b8o/regulations_contracts/pb/writer/v1"
+	pb "github.com/i-b8o/read-only_contracts/pb/writer/v1"
 
 	"github.com/i-b8o/logging"
 )
@@ -90,11 +90,12 @@ func (s *WritableRegulationGRPCServce) UpdateOneParagraph(ctx context.Context, r
 	return &pb.Empty{}, err
 
 }
-func (s *WritableRegulationGRPCServce) DeleteParagraphsForChapter(ctx context.Context, req *pb.DeleteParagraphsForChapterRequest) (*pb.Empty, error) {
-	ID := req.GetID()
-	err := s.paragraphUsecase.DeleteForChapter(ctx, ID)
-	return &pb.Empty{}, err
-}
+
+// func (s *WritableRegulationGRPCServce) DeleteParagraphsForChapter(ctx context.Context, req *pb.DeleteParagraphsForChapterRequest) (*pb.Empty, error) {
+// 	ID := req.GetID()
+// 	err := s.paragraphUsecase.DeleteForChapter(ctx, ID)
+// 	return &pb.Empty{}, err
+// }
 
 func (s *WritableRegulationGRPCServce) GetParagraphsWithHrefs(ctx context.Context, req *pb.GetParagraphsWithHrefsRequest) (*pb.GetParagraphsWithHrefsResponse, error) {
 	ID := req.GetID()
@@ -113,5 +114,4 @@ func (s *WritableRegulationGRPCServce) GetRegulationIdByChapterId(ctx context.Co
 		return &pb.GetRegulationIdByChapterIdResponse{}, err
 	}
 	return &pb.GetRegulationIdByChapterIdResponse{ID: regId}, nil
-
 }

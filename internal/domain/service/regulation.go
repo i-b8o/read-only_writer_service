@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	pb "github.com/i-b8o/read-only_contracts/pb/writable/v1"
+	pb "github.com/i-b8o/read-only_contracts/pb/writer/v1"
 )
 
 type RegulationStorage interface {

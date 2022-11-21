@@ -6,7 +6,7 @@ import (
 	"fmt"
 	client "read-only_writer_service/pkg/client/postgresql"
 
-	pb "github.com/i-b8o/regulations_contracts/pb/writer/v1"
+	pb "github.com/i-b8o/read-only_contracts/pb/writer/v1"
 	"github.com/jackc/pgconn"
 )
 

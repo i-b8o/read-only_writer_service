@@ -1,4 +1,4 @@
-package usecase
+package regulation_usecase
 
 import (
 	"context"

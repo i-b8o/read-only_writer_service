@@ -7,7 +7,7 @@ import (
 	client "read-only_writer_service/pkg/client/postgresql"
 	"time"
 
-	pb_writable "github.com/i-b8o/regulations_contracts/pb/writer/v1"
+	pb "github.com/i-b8o/read-only_contracts/pb/writer/v1"
 	"github.com/jackc/pgconn"
 )
 
@@ -20,7 +20,7 @@ func NewRegulationStorage(client client.PostgreSQLClient) *regulationStorage {
 }
 
 // Create returns the ID of the inserted chapter
-func (rs *regulationStorage) Create(ctx context.Context, regulation *pb_writable.CreateRegulationRequest) (uint64, error) {
+func (rs *regulationStorage) Create(ctx context.Context, regulation *pb.CreateRegulationRequest) (uint64, error) {
 	t := time.Now()
 
 	const sql = `INSERT INTO regulation ("name", "abbreviation", "title", "created_at") VALUES ($1, $2, $3, $4) RETURNING "id"`

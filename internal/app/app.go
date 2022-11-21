@@ -7,11 +7,15 @@ import (
 	postgressql "read-only_writer_service/internal/adapters/db/postgresql"
 	"read-only_writer_service/internal/config"
 	"read-only_writer_service/internal/controller"
+	"read-only_writer_service/internal/domain/service"
+	chapter_usecase "read-only_writer_service/internal/domain/usecase/chapter"
+	paragraph_usecase "read-only_writer_service/internal/domain/usecase/paragraph"
+	regulation_usecase "read-only_writer_service/internal/domain/usecase/regulation"
 	"read-only_writer_service/pkg/client/postgresql"
 	"time"
 
 	"github.com/i-b8o/logging"
-	pb_writable "github.com/i-b8o/regulations_contracts/pb/writer/v1"
+	pb_writable "github.com/i-b8o/read-only_contracts/pb/writer/v1"
 	"google.golang.org/grpc"
 )
 
@@ -34,11 +38,19 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	if err != nil {
 		logger.Fatal(err)
 	}
+	regAdapter := postgressql.NewRegulationStorage(pgClient)
 	chapterAdapter := postgressql.NewChapterStorage(pgClient)
 	paragraphAdapter := postgressql.NewParagraphStorage(pgClient)
-	regAdapter := postgressql.NewRegulationStorage(pgClient)
 
-	regulationGrpcService := controller.NewWritableRegulationGRPCService(regAdapter, chapterAdapter, paragraphAdapter, logger)
+	regulationService := service.NewRegulationService(regAdapter)
+	chapterService := service.NewChapterService(chapterAdapter)
+	paragraphService := service.NewParagraphService(paragraphAdapter)
+
+	regulationUsecase := regulation_usecase.NewRegulationUsecase(regulationService)
+	chapterUsecase := chapter_usecase.NewChapterUsecase(chapterService, paragraphService)
+	paragraphUsecase := paragraph_usecase.NewParagraphUsecase(paragraphService)
+
+	regulationGrpcService := controller.NewWritableRegulationGRPCService(regulationUsecase, chapterUsecase, paragraphUsecase, logger)
 
 	// read ca's cert, verify to client's certificate
 	// homeDir, err := os.UserHomeDir()
