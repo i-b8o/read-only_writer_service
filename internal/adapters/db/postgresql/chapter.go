@@ -20,7 +20,7 @@ func NewChapterStorage(client client.PostgreSQLClient) *chapterStorage {
 
 // Create returns the ID of the inserted chapter
 func (cs *chapterStorage) Create(ctx context.Context, chapter *pb.CreateChapterRequest) (uint64, error) {
-	sql := `INSERT INTO chapter ("name", "num", "order_num","r_id") VALUES ($1,$2,$3,$4) RETURNING "id"`
+	const sql = `INSERT INTO chapter ("name", "num", "order_num","r_id") VALUES ($1,$2,$3,$4) RETURNING "id"`
 
 	row := cs.client.QueryRow(ctx, sql, chapter.Name, chapter.Num, chapter.OrderNum, chapter.RegulationID)
 
@@ -48,10 +48,10 @@ func (cs *chapterStorage) DeleteAllForRegulation(ctx context.Context, regulation
 }
 
 // GetAllById returns all chapter associated with the given ID
-func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) ([]*pb.WriterChapter, error) {
-	const sql = `SELECT id,name,num,order_num FROM "chapter" WHERE r_id = $1 ORDER BY order_num`
+func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) ([]uint64, error) {
+	const sql = `SELECT id FROM "chapter" WHERE r_id = $1 ORDER BY order_num`
 
-	var chapters []*pb.WriterChapter
+	var IDs []uint64
 
 	rows, err := cs.client.Query(ctx, sql, regulationID)
 	if err != nil {
@@ -60,17 +60,17 @@ func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) (
 	defer rows.Close()
 
 	for rows.Next() {
-		chapter := pb.WriterChapter{}
+		var id uint64
 		if err = rows.Scan(
-			&chapter.ID, &chapter.Name, &chapter.Num, &chapter.OrderNum,
+			&id,
 		); err != nil {
 			return nil, err
 		}
 
-		chapters = append(chapters, &chapter)
+		IDs = append(IDs, id)
 	}
 
-	return chapters, nil
+	return IDs, nil
 
 }
 

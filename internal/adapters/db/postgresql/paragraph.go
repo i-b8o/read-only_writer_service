@@ -26,6 +26,7 @@ func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.Writ
 	for _, p := range paragraphs {
 		sql += fmt.Sprintf("($%d, $%d, $%d , $%d, $%d, $%d, $%d, $%d),", i, i+1, i+2, i+3, i+4, i+5, i+6, i+7)
 		i = i + 8
+		// CreateAll will be used only for internal purposes by admin
 		vals = append(vals, p.ID, p.Num, p.IsTable, p.IsNFT, p.HasLinks, p.Class, p.Content, p.ChapterID)
 	}
 	sql = sql[:len(sql)-1]
@@ -43,7 +44,7 @@ func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.Writ
 }
 
 func (ps *paragraphStorage) UpdateOne(ctx context.Context, content string, paragraphID uint64) error {
-	sql := `UPDATE "paragraph" SET content = $1 WHERE paragraph_id = $2 RETURNING "id"`
+	const sql = `UPDATE "paragraph" SET content = $1 WHERE paragraph_id = $2 RETURNING "id"`
 	row := ps.client.QueryRow(ctx, sql, content, paragraphID)
 	var ID uint64
 
@@ -62,7 +63,7 @@ func (ps *paragraphStorage) UpdateOne(ctx context.Context, content string, parag
 
 // Delete
 func (ps *paragraphStorage) DeleteForChapter(ctx context.Context, chapterID uint64) error {
-	sql := `delete from paragraph where c_id=$1`
+	const sql = `delete from paragraph where c_id=$1`
 	_, err := ps.client.Exec(ctx, sql, chapterID)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {

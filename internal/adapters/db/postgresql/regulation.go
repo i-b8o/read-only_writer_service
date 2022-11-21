@@ -39,7 +39,7 @@ func (rs *regulationStorage) Create(ctx context.Context, regulation *pb_writable
 
 // Delete
 func (rs *regulationStorage) Delete(ctx context.Context, regulationID uint64) error {
-	sql := `delete from regulation where id=$1`
+	const sql = `delete from regulation where id=$1`
 	_, err := rs.client.Exec(ctx, sql, regulationID)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {

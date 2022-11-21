@@ -8,19 +8,19 @@ import (
 	"github.com/i-b8o/logging"
 )
 
-type RegulationStorage interface {
+type RegulationUsecase interface {
 	Create(ctx context.Context, regulation *pb.CreateRegulationRequest) (uint64, error)
 	Delete(ctx context.Context, regulationID uint64) error
 }
 
-type ChapterStorage interface {
+type ChapterUsecase interface {
 	Create(ctx context.Context, chapter *pb.CreateChapterRequest) (uint64, error)
 	DeleteAllForRegulation(ctx context.Context, regulationID uint64) error
-	GetAllById(ctx context.Context, regulationID uint64) ([]*pb.WriterChapter, error)
+	GetAllById(ctx context.Context, regulationID uint64) ([]uint64, error)
 	GetRegulationId(ctx context.Context, chapterID uint64) (uint64, error)
 }
 
-type ParagraphStorage interface {
+type ParagraphUsecase interface {
 	CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error
 	UpdateOne(ctx context.Context, content string, paragraphID uint64) error
 	DeleteForChapter(ctx context.Context, chapterID uint64) error
@@ -28,24 +28,24 @@ type ParagraphStorage interface {
 }
 
 type WritableRegulationGRPCServce struct {
-	regulationStorage RegulationStorage
-	chapterStorage    ChapterStorage
-	paragraphStorage  ParagraphStorage
+	regulationUsecase RegulationUsecase
+	chapterUsecase    ChapterUsecase
+	paragraphUsecase  ParagraphUsecase
 	logging           logging.Logger
 	pb.UnimplementedWriterGRPCServer
 }
 
-func NewWritableRegulationGRPCService(regulationStorage RegulationStorage, chapterStorage ChapterStorage, paragraphStorage ParagraphStorage, loging logging.Logger) *WritableRegulationGRPCServce {
+func NewWritableRegulationGRPCService(regulationUsecase RegulationUsecase, chapterUsecase ChapterUsecase, paragraphStorage ParagraphUsecase, loging logging.Logger) *WritableRegulationGRPCServce {
 	return &WritableRegulationGRPCServce{
-		regulationStorage: regulationStorage,
-		chapterStorage:    chapterStorage,
-		paragraphStorage:  paragraphStorage,
+		regulationUsecase: regulationUsecase,
+		chapterUsecase:    chapterUsecase,
+		paragraphUsecase:  paragraphStorage,
 		logging:           loging,
 	}
 }
 
 func (s *WritableRegulationGRPCServce) CreateRegulation(ctx context.Context, req *pb.CreateRegulationRequest) (*pb.CreateRegulationResponse, error) {
-	id, err := s.regulationStorage.Create(ctx, req)
+	id, err := s.regulationUsecase.Create(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -53,52 +53,52 @@ func (s *WritableRegulationGRPCServce) CreateRegulation(ctx context.Context, req
 }
 func (s *WritableRegulationGRPCServce) DeleteRegulation(ctx context.Context, req *pb.DeleteRegulationRequest) (*pb.Empty, error) {
 	ID := req.GetID()
-	err := s.regulationStorage.Delete(ctx, ID)
+	err := s.regulationUsecase.Delete(ctx, ID)
 	return &pb.Empty{}, err
 }
 func (s *WritableRegulationGRPCServce) CreateChapter(ctx context.Context, req *pb.CreateChapterRequest) (*pb.CreateChapterResponse, error) {
-	ID, err := s.chapterStorage.Create(ctx, req)
+	ID, err := s.chapterUsecase.Create(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.CreateChapterResponse{ID: ID}, nil
 
 }
-func (s *WritableRegulationGRPCServce) GetAllChapters(ctx context.Context, req *pb.GetAllChaptersRequest) (*pb.GetAllChaptersResponse, error) {
+func (s *WritableRegulationGRPCServce) GetAllChaptersIds(ctx context.Context, req *pb.GetAllChaptersIdsRequest) (*pb.GetAllChaptersIdsResponse, error) {
 	ID := req.GetID()
-	chapters, err := s.chapterStorage.GetAllById(ctx, ID)
+	IDs, err := s.chapterUsecase.GetAllById(ctx, ID)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.GetAllChaptersResponse{Chapters: chapters}, nil
+	return &pb.GetAllChaptersIdsResponse{IDs: IDs}, nil
 
 }
 func (s *WritableRegulationGRPCServce) DeleteChaptersForRegulation(ctx context.Context, req *pb.DeleteChaptersForRegulationRequest) (*pb.Empty, error) {
 	ID := req.GetID()
-	err := s.chapterStorage.DeleteAllForRegulation(ctx, ID)
+	err := s.chapterUsecase.DeleteAllForRegulation(ctx, ID)
 	return &pb.Empty{}, err
 }
 func (s *WritableRegulationGRPCServce) CreateAllParagraphs(ctx context.Context, req *pb.CreateAllParagraphsRequest) (*pb.Empty, error) {
 	paragraphs := req.GetParagraphs()
-	err := s.paragraphStorage.CreateAll(ctx, paragraphs)
+	err := s.paragraphUsecase.CreateAll(ctx, paragraphs)
 	return &pb.Empty{}, err
 }
 func (s *WritableRegulationGRPCServce) UpdateOneParagraph(ctx context.Context, req *pb.UpdateOneParagraphRequest) (*pb.Empty, error) {
 	ID := req.GetID()
 	content := req.GetContent()
-	err := s.paragraphStorage.UpdateOne(ctx, content, ID)
+	err := s.paragraphUsecase.UpdateOne(ctx, content, ID)
 	return &pb.Empty{}, err
 
 }
 func (s *WritableRegulationGRPCServce) DeleteParagraphsForChapter(ctx context.Context, req *pb.DeleteParagraphsForChapterRequest) (*pb.Empty, error) {
 	ID := req.GetID()
-	err := s.paragraphStorage.DeleteForChapter(ctx, ID)
+	err := s.paragraphUsecase.DeleteForChapter(ctx, ID)
 	return &pb.Empty{}, err
 }
 
 func (s *WritableRegulationGRPCServce) GetParagraphsWithHrefs(ctx context.Context, req *pb.GetParagraphsWithHrefsRequest) (*pb.GetParagraphsWithHrefsResponse, error) {
 	ID := req.GetID()
-	paragraphs, err := s.paragraphStorage.GetWithHrefs(ctx, ID)
+	paragraphs, err := s.paragraphUsecase.GetWithHrefs(ctx, ID)
 	if err != nil {
 		return &pb.GetParagraphsWithHrefsResponse{}, err
 	}
@@ -108,7 +108,7 @@ func (s *WritableRegulationGRPCServce) GetParagraphsWithHrefs(ctx context.Contex
 
 func (s *WritableRegulationGRPCServce) GetRegulationIdByChapterId(ctx context.Context, req *pb.GetRegulationIdByChapterIdRequest) (*pb.GetRegulationIdByChapterIdResponse, error) {
 	ID := req.GetID()
-	regId, err := s.chapterStorage.GetRegulationId(ctx, ID)
+	regId, err := s.chapterUsecase.GetRegulationId(ctx, ID)
 	if err != nil {
 		return &pb.GetRegulationIdByChapterIdResponse{}, err
 	}

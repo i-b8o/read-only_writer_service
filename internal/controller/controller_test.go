@@ -86,7 +86,6 @@ func TestCreateRegulation(t *testing.T) {
 			); err != nil {
 				t.Log(err)
 			}
-			t.Log(id, name, abbreviation)
 		}
 		assert.Equal(id, e.ID)
 		assert.Equal(name, test.input.Name)
@@ -143,8 +142,8 @@ func TestDeleteRegulation(t *testing.T) {
 		if err != nil {
 			t.Log(err)
 		}
-		assert.Equal(test.err, err)
-		sql1 := "select id, name, abbreviation from regulation where name=name"
+		assert.Equal(test.err, err, err)
+		sql1 := "select id, name, abbreviation from regulation where name='name'"
 		rows, err := pgClient.Query(ctx, sql1)
 		if err != nil {
 			t.Log(err)
@@ -161,9 +160,148 @@ func TestDeleteRegulation(t *testing.T) {
 			}
 			t.Log(id, name, abbreviation)
 		}
-		assert.True(id > 0)
+		assert.True(id == 0, "returned id %d", id)
 	}
 
+	_, err = pgClient.Exec(ctx, resetDB)
+	if err != nil {
+		t.Log(err)
+	}
+}
+
+func TestCreateChapter(t *testing.T) {
+	assert := assert.New(t)
+	pgClient := setupDB()
+	defer pgClient.Close()
+	conn, err := grpc.Dial(
+		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := pb.NewWriterGRPCClient(conn)
+	defer conn.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tests := []struct {
+		input    *pb.CreateChapterRequest
+		expected *pb.CreateChapterResponse
+		err      error
+	}{
+		{
+			input:    &pb.CreateChapterRequest{Name: "Имя главы", Num: "VI", OrderNum: 6, RegulationID: 1},
+			expected: &pb.CreateChapterResponse{ID: 4},
+			err:      nil,
+		},
+	}
+
+	for _, test := range tests {
+		resp, err := client.CreateChapter(ctx, test.input)
+		if err != nil {
+			t.Log(err)
+		}
+		assert.True(proto.Equal(test.expected, resp), fmt.Sprintf("CreateChapter(%v)=%v want: %v", test.input, resp, test.expected))
+		assert.Equal(test.err, err, err)
+	}
+
+	_, err = pgClient.Exec(ctx, resetDB)
+	if err != nil {
+		t.Log(err)
+	}
+}
+
+func TestGetAllChapters(t *testing.T) {
+	assert := assert.New(t)
+	conn, err := grpc.Dial(
+		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := pb.NewWriterGRPCClient(conn)
+	defer conn.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tests := []struct {
+		input    *pb.GetAllChaptersIdsRequest
+		expected *pb.GetAllChaptersIdsResponse
+		err      error
+	}{
+		{
+			input:    &pb.GetAllChaptersIdsRequest{ID: 1},
+			expected: &pb.GetAllChaptersIdsResponse{IDs: []uint64{1, 2, 3}},
+			err:      nil,
+		},
+	}
+
+	for _, test := range tests {
+		resp, err := client.GetAllChaptersIds(ctx, test.input)
+		if err != nil {
+			t.Log(err)
+		}
+		assert.True(proto.Equal(test.expected, resp), fmt.Sprintf("GetAllChaptersIds(%v)=%v want: %v", test.input, resp, test.expected))
+		assert.Equal(test.err, err, err)
+	}
+
+}
+
+func TestDeleteChaptersForRegulation(t *testing.T) {
+	assert := assert.New(t)
+	conn, err := grpc.Dial(
+		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pgClient := setupDB()
+	defer pgClient.Close()
+
+	client := pb.NewWriterGRPCClient(conn)
+	defer conn.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tests := []struct {
+		input *pb.DeleteChaptersForRegulationRequest
+		err   error
+	}{
+		{
+			input: &pb.DeleteChaptersForRegulationRequest{ID: 1},
+			err:   nil,
+		},
+	}
+
+	for _, test := range tests {
+		_, err := client.DeleteChaptersForRegulation(ctx, test.input)
+		if err != nil {
+			t.Log(err)
+		}
+		assert.Equal(test.err, err, err)
+		sql := fmt.Sprintf("select id from chapter where id=%d", test.input.ID)
+		rows, err := pgClient.Query(ctx, sql)
+		if err != nil {
+			t.Log(err)
+		}
+		defer rows.Close()
+
+		var id uint64
+		var name, abbreviation string
+		for rows.Next() {
+			if err = rows.Scan(
+				&id, &name, &abbreviation,
+			); err != nil {
+				t.Log(err)
+			}
+			t.Log(id, name, abbreviation)
+		}
+		assert.True(id == 0, "returned id %d", id)
+	}
 	_, err = pgClient.Exec(ctx, resetDB)
 	if err != nil {
 		t.Log(err)
