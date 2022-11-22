@@ -2,8 +2,11 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/i-b8o/read-only_contracts/pb/writer/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/i-b8o/logging"
 )
@@ -100,6 +103,7 @@ func (s *WritableRegulationGRPCServce) GetRegulationIdByChapterId(ctx context.Co
 	ID := req.GetID()
 	regId, err := s.chapterUsecase.GetRegulationId(ctx, ID)
 	if err != nil {
+		err := status.Errorf(codes.NotFound, fmt.Sprintf("no rows in result set: %d", ID))
 		return &pb.GetRegulationIdByChapterIdResponse{}, err
 	}
 	return &pb.GetRegulationIdByChapterIdResponse{ID: regId}, nil

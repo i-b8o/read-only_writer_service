@@ -12,7 +12,9 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -38,6 +40,7 @@ func setupDB() *pgxpool.Pool {
 	return pgClient
 }
 
+// CreateRegulation
 func TestCreateRegulation(t *testing.T) {
 	assert := assert.New(t)
 	pgClient := setupDB()
@@ -99,6 +102,7 @@ func TestCreateRegulation(t *testing.T) {
 	}
 }
 
+// DeleteRegulation
 func TestDeleteRegulation(t *testing.T) {
 	assert := assert.New(t)
 	conn, err := grpc.Dial(
@@ -158,6 +162,7 @@ func TestDeleteRegulation(t *testing.T) {
 	}
 }
 
+// CreateChapter
 func TestCreateChapter(t *testing.T) {
 	assert := assert.New(t)
 	pgClient := setupDB()
@@ -201,6 +206,7 @@ func TestCreateChapter(t *testing.T) {
 	}
 }
 
+// GetAllChaptersIds
 func TestGetAllChaptersIds(t *testing.T) {
 	assert := assert.New(t)
 	conn, err := grpc.Dial(
@@ -237,6 +243,8 @@ func TestGetAllChaptersIds(t *testing.T) {
 	}
 
 }
+
+// CreateAllParagraphs
 func TestCreateAllParagraphs(t *testing.T) {
 	assert := assert.New(t)
 	pgClient := setupDB()
@@ -258,18 +266,216 @@ func TestCreateAllParagraphs(t *testing.T) {
 		err   error
 	}{
 		{
-			input: &pb.CreateAllParagraphsRequest{},
+			input: &pb.CreateAllParagraphsRequest{Paragraphs: []*pb.WriterParagraph{&pb.WriterParagraph{ID: 4, Num: 4, HasLinks: false, IsTable: false, IsNFT: false, Class: "class", Content: "Содержимое четвертого параграфа", ChapterID: 3}, &pb.WriterParagraph{ID: 5, Num: 5, HasLinks: true, IsTable: true, IsNFT: true, Class: "class", Content: "Содержимое пятого параграфа", ChapterID: 3}}},
 			err:   nil,
 		},
 	}
 
 	for _, test := range tests {
-		resp, err := client.CreateAllParagraphs(ctx, test.input)
+		_, err := client.CreateAllParagraphs(ctx, test.input)
 		if err != nil {
 			t.Log(err)
 		}
-		assert.True(proto.Equal(test.expected, resp), fmt.Sprintf("CreateChapter(%v)=%v want: %v", test.input, resp, test.expected))
 		assert.Equal(test.err, err, err)
+		for _, p := range test.input.Paragraphs {
+			sql := fmt.Sprintf("select paragraph_id,order_num,is_table,is_nft,has_links,class,content,c_id from paragraph where id=%d", p.ID)
+			rows, err := pgClient.Query(ctx, sql)
+			if err != nil {
+				t.Log(err)
+			}
+			defer rows.Close()
+
+			var pId, cId uint64
+			var orderNum uint32
+			var isTable, isNft, hasLinks bool
+			var class, content string
+			for rows.Next() {
+				if err = rows.Scan(
+					&pId, &orderNum, &isTable, &isNft, &hasLinks, &class, &content, &cId,
+				); err != nil {
+					t.Log(err)
+				}
+			}
+			assert.Equal(p.ID, pId)
+			assert.Equal(p.Num, orderNum)
+			assert.Equal(p.ChapterID, cId)
+			assert.Equal(p.Class, class)
+			assert.Equal(p.Content, content)
+			assert.Equal(p.HasLinks, hasLinks)
+			assert.Equal(p.IsTable, isTable)
+			assert.Equal(p.IsNFT, isNft)
+		}
+
+	}
+
+	_, err = pgClient.Exec(ctx, resetDB)
+	if err != nil {
+		t.Log(err)
+	}
+}
+
+// UpdateOneParagraph
+func TestUpdateOneParagraph(t *testing.T) {
+	assert := assert.New(t)
+	pgClient := setupDB()
+	defer pgClient.Close()
+	conn, err := grpc.Dial(
+		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := pb.NewWriterGRPCClient(conn)
+	defer conn.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tests := []struct {
+		input *pb.UpdateOneParagraphRequest
+		err   error
+	}{
+		{
+			input: &pb.UpdateOneParagraphRequest{ID: 3, Content: "Измененное содержимое третьего параграфа"},
+			err:   nil,
+		},
+	}
+
+	for _, test := range tests {
+		_, err := client.UpdateOneParagraph(ctx, test.input)
+		if err != nil {
+			t.Log(err)
+		}
+		assert.Equal(test.err, err, err)
+		sql := fmt.Sprintf("select content from paragraph where id=%d", test.input.ID)
+		rows, err := pgClient.Query(ctx, sql)
+		if err != nil {
+			t.Log(err)
+		}
+		defer rows.Close()
+		var content string
+		for rows.Next() {
+			if err = rows.Scan(
+				&content,
+			); err != nil {
+				t.Log(err)
+			}
+		}
+		assert.Equal(test.input.Content, content)
+
+	}
+
+	_, err = pgClient.Exec(ctx, resetDB)
+	if err != nil {
+		t.Log(err)
+	}
+}
+
+// GetParagraphsWithHrefs
+func TestGetParagraphsWithHrefs(t *testing.T) {
+	assert := assert.New(t)
+	pgClient := setupDB()
+	defer pgClient.Close()
+	conn, err := grpc.Dial(
+		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := pb.NewWriterGRPCClient(conn)
+	defer conn.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tests := []struct {
+		input    *pb.GetParagraphsWithHrefsRequest
+		expected *pb.GetParagraphsWithHrefsResponse
+		err      error
+	}{
+		{
+			input:    &pb.GetParagraphsWithHrefsRequest{ID: 1},
+			expected: &pb.GetParagraphsWithHrefsResponse{Paragraphs: []*pb.WriterParagraph{&pb.WriterParagraph{ID: 2, Content: "Содержимое второго <a href='372952/4e92c731969781306ebd1095867d2385f83ac7af/335104'>пункта 5.14</a> параграфа"}, &pb.WriterParagraph{ID: 3, Content: " <a id='335050'></a>Содержимое третьего параграфа<a href='372952/4e92c731969781306ebd1095867d2385f83ac7af/335065'>таблицей N 2</a>."}}},
+			err:      nil,
+		},
+	}
+
+	for _, test := range tests {
+		e, err := client.GetParagraphsWithHrefs(ctx, test.input)
+		if err != nil {
+			t.Log(err)
+		}
+		assert.Equal(test.err, err, err)
+
+		for i, t := range test.expected.Paragraphs {
+			assert.Equal(t.ID, e.Paragraphs[i].ID, i)
+			assert.Equal(t.Content, e.Paragraphs[i].Content, i)
+			assert.Equal(t.HasLinks, e.Paragraphs[i].HasLinks, i)
+
+		}
+
+	}
+
+	_, err = pgClient.Exec(ctx, resetDB)
+	if err != nil {
+		t.Log(err)
+	}
+}
+
+// GetRegulationIdByChapterId
+func TestGetRegulationIdByChapterId(t *testing.T) {
+	assert := assert.New(t)
+	pgClient := setupDB()
+	defer pgClient.Close()
+	conn, err := grpc.Dial(
+		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := pb.NewWriterGRPCClient(conn)
+	defer conn.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tests := []struct {
+		input    *pb.GetRegulationIdByChapterIdRequest
+		expected *pb.GetRegulationIdByChapterIdResponse
+		err      error
+	}{
+		{
+			input:    &pb.GetRegulationIdByChapterIdRequest{ID: 1},
+			expected: &pb.GetRegulationIdByChapterIdResponse{ID: 1},
+			err:      nil,
+		},
+		{
+			input:    &pb.GetRegulationIdByChapterIdRequest{ID: 2},
+			expected: &pb.GetRegulationIdByChapterIdResponse{ID: 1},
+			err:      nil,
+		},
+		{
+			input:    &pb.GetRegulationIdByChapterIdRequest{ID: 3},
+			expected: &pb.GetRegulationIdByChapterIdResponse{ID: 1},
+			err:      nil,
+		},
+		{
+			input:    &pb.GetRegulationIdByChapterIdRequest{ID: 4},
+			expected: nil,
+			err:      status.Errorf(codes.NotFound, "no rows in result set: 4"),
+		},
+	}
+
+	for _, test := range tests {
+		e, err := client.GetRegulationIdByChapterId(ctx, test.input)
+		if err != nil {
+			t.Log(err)
+		}
+		assert.Equal(test.err, err, err)
+		if test.expected == nil {
+			continue
+		}
+		assert.Equal(test.expected.ID, e.ID, "expected:%d, actual:%d", test.expected.ID, e.ID)
 	}
 
 	_, err = pgClient.Exec(ctx, resetDB)
@@ -344,5 +550,5 @@ create index idx_search on reg_search using GIN(ts);
 
 INSERT INTO regulation ("name", "abbreviation", "title", "created_at") VALUES ('Имя первой записи', 'Аббревиатура первой записи', 'Заголовок первой записи', '2023-01-01 00:00:00');
 INSERT INTO chapter ("name", "num", "order_num","r_id", "updated_at") VALUES ('Имя первой записи','I',1,1, '2023-01-01 00:00:00'), ('Имя второй записи','II',2,1, '2023-01-01 00:00:00'), ('Имя третьей записи','III',3,1, '2023-01-01 00:00:00');
-INSERT INTO paragraph ("paragraph_id","order_num","is_table","is_nft","has_links","class","content","c_id") VALUES (1,1,false,false,false,'any-class','Содержимое первого параграфа', 1), (2,2,true,true,true,'any-class','Содержимое второго параграфа', 1), (3,3,false,false,false,'any-class','Содержимое третьего параграфа', 1);
+INSERT INTO paragraph ("paragraph_id","order_num","is_table","is_nft","has_links","class","content","c_id") VALUES (1,1,false,false,false,'any-class','Содержимое первого параграфа', 1), (2,2,true,true,true,'any-class','Содержимое второго <a href=''372952/4e92c731969781306ebd1095867d2385f83ac7af/335104''>пункта 5.14</a> параграфа', 1), (3,3,false,false,true,'any-class',' <a id=''335050''></a>Содержимое третьего параграфа<a href=''372952/4e92c731969781306ebd1095867d2385f83ac7af/335065''>таблицей N 2</a>.', 1);
 `
