@@ -49,5 +49,9 @@ func (u *regulationUsecase) Delete(ctx context.Context, regulationID uint64) err
 	if err != nil {
 		return err
 	}
+	err = u.regulationService.Delete(ctx, regulationID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
