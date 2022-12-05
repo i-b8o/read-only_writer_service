@@ -192,7 +192,7 @@ func TestGetAll(t *testing.T) {
 			t.Log(err)
 		}
 		assert.Equal(test.err, err, err)
-		assert.Equal(test.expected, resp)
+		assert.True(proto.Equal(test.expected, resp), "GetAll()=", resp, "want:", test.expected)
 	}
 	_, err = pgClient.Exec(ctx, resetDB)
 	if err != nil {
