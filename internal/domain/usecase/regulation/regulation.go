@@ -9,6 +9,7 @@ import (
 type RegulationService interface {
 	Create(ctx context.Context, regulation *pb.CreateRegulationRequest) (uint64, error)
 	Delete(ctx context.Context, regulationID uint64) error
+	GetAll(ctx context.Context) (regulations []*pb.WriterRegulation, err error)
 }
 
 type ChapterService interface {
@@ -29,7 +30,9 @@ type regulationUsecase struct {
 func NewRegulationUsecase(regulationService RegulationService, chapterService ChapterService, paragraphService ParagraphService) *regulationUsecase {
 	return &regulationUsecase{regulationService: regulationService, chapterService: chapterService, paragraphService: paragraphService}
 }
-
+func (u *regulationUsecase) GetAll(ctx context.Context) (regulations []*pb.WriterRegulation, err error) {
+	return u.regulationService.GetAll(ctx)
+}
 func (u *regulationUsecase) Create(ctx context.Context, regulation *pb.CreateRegulationRequest) (uint64, error) {
 	return u.regulationService.Create(ctx, regulation)
 }

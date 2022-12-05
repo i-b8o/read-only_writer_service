@@ -6,7 +6,9 @@ import (
 	"net"
 	postgressql "read-only_writer_service/internal/adapters/db/postgresql"
 	"read-only_writer_service/internal/config"
-	"read-only_writer_service/internal/controller"
+	chapter_controller "read-only_writer_service/internal/controller/chapter"
+	paragraph_controller "read-only_writer_service/internal/controller/paragraph"
+	regulation_controller "read-only_writer_service/internal/controller/regulation"
 	"read-only_writer_service/internal/domain/service"
 	chapter_usecase "read-only_writer_service/internal/domain/usecase/chapter"
 	paragraph_usecase "read-only_writer_service/internal/domain/usecase/paragraph"
@@ -50,8 +52,9 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	chapterUsecase := chapter_usecase.NewChapterUsecase(chapterService)
 	paragraphUsecase := paragraph_usecase.NewParagraphUsecase(paragraphService)
 
-	regulationGrpcService := controller.NewWritableRegulationGRPCService(regulationUsecase, chapterUsecase, paragraphUsecase, logger)
-
+	regulationGrpcService := regulation_controller.NewWriterRegulationGrpcController(regulationUsecase, logger)
+	chapterGrpcService := chapter_controller.NewWriterChapterGrpcController(chapterUsecase, logger)
+	paragraphGrpcService := paragraph_controller.NewWritableRegulationGRPCService(paragraphUsecase, logger)
 	// read ca's cert, verify to client's certificate
 	// homeDir, err := os.UserHomeDir()
 	// if err != nil {
@@ -86,7 +89,9 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 
 	// grpcServer := grpc.NewServer(grpc.Creds(tlsCredentials))
 	grpcServer := grpc.NewServer()
-	pb_writable.RegisterWriterGRPCServer(grpcServer, regulationGrpcService)
+	pb_writable.RegisterWriterRegulationGRPCServer(grpcServer, regulationGrpcService)
+	pb_writable.RegisterWriterChapterGRPCServer(grpcServer, chapterGrpcService)
+	pb_writable.RegisterWriterParagraphGRPCServer(grpcServer, paragraphGrpcService)
 
 	return App{cfg: config, grpcServer: grpcServer, logger: logger}, nil
 }

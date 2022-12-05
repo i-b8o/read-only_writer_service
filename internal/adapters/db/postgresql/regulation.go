@@ -48,3 +48,27 @@ func (rs *regulationStorage) Delete(ctx context.Context, regulationID uint64) er
 
 	return err
 }
+
+// GetAll
+func (rs *regulationStorage) GetAll(ctx context.Context) (regulations []*pb.WriterRegulation, err error) {
+	const sql = `SELECT id, name, abbreviation title FROM "regulation"`
+
+	rows, err := rs.client.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var regulation pb.WriterRegulation
+		if err = rows.Scan(
+			&regulation.ID, &regulation.Abbreviation, &regulation.Title,
+		); err != nil {
+			return nil, err
+		}
+
+		regulations = append(regulations, &regulation)
+	}
+
+	return regulations, nil
+}

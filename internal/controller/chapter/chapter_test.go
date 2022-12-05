@@ -1,4 +1,4 @@
-package controller
+package chapter_controller
 
 import (
 	"context"
@@ -40,8 +40,7 @@ func setupDB() *pgxpool.Pool {
 	return pgClient
 }
 
-// CreateRegulation
-func TestCreateRegulation(t *testing.T) {
+func TestCreate(t *testing.T) {
 	assert := assert.New(t)
 	pgClient := setupDB()
 	defer pgClient.Close()
@@ -52,129 +51,7 @@ func TestCreateRegulation(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	client := pb.NewWriterGRPCClient(conn)
-	defer conn.Close()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	tests := []struct {
-		input    *pb.CreateRegulationRequest
-		expected *pb.CreateRegulationResponse
-		err      error
-	}{
-		{
-			input:    &pb.CreateRegulationRequest{Name: "Имя правила", Abbreviation: "АББРЕВИАТУРА", Title: "Заголовок"},
-			expected: &pb.CreateRegulationResponse{ID: 2},
-			err:      nil,
-		},
-	}
-
-	for _, test := range tests {
-		e, err := client.CreateRegulation(ctx, test.input)
-		if err != nil {
-			t.Log(err)
-		}
-		sql := fmt.Sprintf("select id, name, abbreviation from regulation where id=%d", e.ID)
-		rows, err := pgClient.Query(ctx, sql)
-		if err != nil {
-			t.Log(err)
-		}
-		defer rows.Close()
-
-		var id uint64
-		var name, abbreviation string
-		for rows.Next() {
-			if err = rows.Scan(
-				&id, &name, &abbreviation,
-			); err != nil {
-				t.Log(err)
-			}
-		}
-		assert.Equal(id, e.ID)
-		assert.Equal(name, test.input.Name)
-		assert.Equal(abbreviation, test.input.Abbreviation)
-		assert.True(proto.Equal(test.expected, e), fmt.Sprintf("CreateRegulation(%v)=%v want: %v", test.input, e, test.expected))
-		assert.Equal(test.err, err)
-	}
-	_, err = pgClient.Exec(ctx, resetDB)
-	if err != nil {
-		t.Log(err)
-	}
-}
-
-// DeleteRegulation
-func TestDeleteRegulation(t *testing.T) {
-	assert := assert.New(t)
-	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pgClient := setupDB()
-	defer pgClient.Close()
-
-	client := pb.NewWriterGRPCClient(conn)
-	defer conn.Close()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	tests := []struct {
-		input *pb.DeleteRegulationRequest
-		err   error
-	}{
-		{
-			input: &pb.DeleteRegulationRequest{ID: 1},
-			err:   nil,
-		},
-	}
-
-	for _, test := range tests {
-		_, err := client.DeleteRegulation(ctx, test.input)
-		if err != nil {
-			t.Log(err)
-		}
-		assert.Equal(test.err, err, err)
-		sql := fmt.Sprintf("select id from chapter where id=%d", test.input.ID)
-		rows, err := pgClient.Query(ctx, sql)
-		if err != nil {
-			t.Log(err)
-		}
-		defer rows.Close()
-
-		var id uint64
-		var name, abbreviation string
-		for rows.Next() {
-			if err = rows.Scan(
-				&id, &name, &abbreviation,
-			); err != nil {
-				t.Log(err)
-			}
-			t.Log(id, name, abbreviation)
-		}
-		assert.True(id == 0, "returned id %d", id)
-	}
-	_, err = pgClient.Exec(ctx, resetDB)
-	if err != nil {
-		t.Log(err)
-	}
-}
-
-// CreateChapter
-func TestCreateChapter(t *testing.T) {
-	assert := assert.New(t)
-	pgClient := setupDB()
-	defer pgClient.Close()
-	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := pb.NewWriterGRPCClient(conn)
+	client := pb.NewWriterChapterGRPCClient(conn)
 	defer conn.Close()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -192,7 +69,7 @@ func TestCreateChapter(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		resp, err := client.CreateChapter(ctx, test.input)
+		resp, err := client.Create(ctx, test.input)
 		if err != nil {
 			t.Log(err)
 		}
@@ -206,8 +83,7 @@ func TestCreateChapter(t *testing.T) {
 	}
 }
 
-// GetAllChaptersIds
-func TestGetAllChaptersIds(t *testing.T) {
+func TestGetAll(t *testing.T) {
 	assert := assert.New(t)
 	conn, err := grpc.Dial(
 		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
@@ -216,7 +92,7 @@ func TestGetAllChaptersIds(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	client := pb.NewWriterGRPCClient(conn)
+	client := pb.NewWriterChapterGRPCClient(conn)
 	defer conn.Close()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -234,7 +110,7 @@ func TestGetAllChaptersIds(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		resp, err := client.GetAllChaptersIds(ctx, test.input)
+		resp, err := client.GetAll(ctx, test.input)
 		if err != nil {
 			t.Log(err)
 		}
@@ -244,8 +120,7 @@ func TestGetAllChaptersIds(t *testing.T) {
 
 }
 
-// CreateAllParagraphs
-func TestCreateAllParagraphs(t *testing.T) {
+func TestGetRegulationId(t *testing.T) {
 	assert := assert.New(t)
 	pgClient := setupDB()
 	defer pgClient.Close()
@@ -256,185 +131,7 @@ func TestCreateAllParagraphs(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	client := pb.NewWriterGRPCClient(conn)
-	defer conn.Close()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	tests := []struct {
-		input *pb.CreateAllParagraphsRequest
-		err   error
-	}{
-		{
-			input: &pb.CreateAllParagraphsRequest{Paragraphs: []*pb.WriterParagraph{&pb.WriterParagraph{ID: 4, Num: 4, HasLinks: false, IsTable: false, IsNFT: false, Class: "class", Content: "Содержимое четвертого параграфа", ChapterID: 3}, &pb.WriterParagraph{ID: 5, Num: 5, HasLinks: true, IsTable: true, IsNFT: true, Class: "class", Content: "Содержимое пятого параграфа", ChapterID: 3}}},
-			err:   nil,
-		},
-	}
-
-	for _, test := range tests {
-		_, err := client.CreateAllParagraphs(ctx, test.input)
-		if err != nil {
-			t.Log(err)
-		}
-		assert.Equal(test.err, err, err)
-		for _, p := range test.input.Paragraphs {
-			sql := fmt.Sprintf("select paragraph_id,order_num,is_table,is_nft,has_links,class,content,c_id from paragraph where id=%d", p.ID)
-			rows, err := pgClient.Query(ctx, sql)
-			if err != nil {
-				t.Log(err)
-			}
-			defer rows.Close()
-
-			var pId, cId uint64
-			var orderNum uint32
-			var isTable, isNft, hasLinks bool
-			var class, content string
-			for rows.Next() {
-				if err = rows.Scan(
-					&pId, &orderNum, &isTable, &isNft, &hasLinks, &class, &content, &cId,
-				); err != nil {
-					t.Log(err)
-				}
-			}
-			assert.Equal(p.ID, pId)
-			assert.Equal(p.Num, orderNum)
-			assert.Equal(p.ChapterID, cId)
-			assert.Equal(p.Class, class)
-			assert.Equal(p.Content, content)
-			assert.Equal(p.HasLinks, hasLinks)
-			assert.Equal(p.IsTable, isTable)
-			assert.Equal(p.IsNFT, isNft)
-		}
-
-	}
-
-	_, err = pgClient.Exec(ctx, resetDB)
-	if err != nil {
-		t.Log(err)
-	}
-}
-
-// UpdateOneParagraph
-func TestUpdateOneParagraph(t *testing.T) {
-	assert := assert.New(t)
-	pgClient := setupDB()
-	defer pgClient.Close()
-	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := pb.NewWriterGRPCClient(conn)
-	defer conn.Close()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	tests := []struct {
-		input *pb.UpdateOneParagraphRequest
-		err   error
-	}{
-		{
-			input: &pb.UpdateOneParagraphRequest{ID: 3, Content: "Измененное содержимое третьего параграфа"},
-			err:   nil,
-		},
-	}
-
-	for _, test := range tests {
-		_, err := client.UpdateOneParagraph(ctx, test.input)
-		if err != nil {
-			t.Log(err)
-		}
-		assert.Equal(test.err, err, err)
-		sql := fmt.Sprintf("select content from paragraph where id=%d", test.input.ID)
-		rows, err := pgClient.Query(ctx, sql)
-		if err != nil {
-			t.Log(err)
-		}
-		defer rows.Close()
-		var content string
-		for rows.Next() {
-			if err = rows.Scan(
-				&content,
-			); err != nil {
-				t.Log(err)
-			}
-		}
-		assert.Equal(test.input.Content, content)
-
-	}
-
-	_, err = pgClient.Exec(ctx, resetDB)
-	if err != nil {
-		t.Log(err)
-	}
-}
-
-// GetParagraphsWithHrefs
-func TestGetParagraphsWithHrefs(t *testing.T) {
-	assert := assert.New(t)
-	pgClient := setupDB()
-	defer pgClient.Close()
-	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := pb.NewWriterGRPCClient(conn)
-	defer conn.Close()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	tests := []struct {
-		input    *pb.GetParagraphsWithHrefsRequest
-		expected *pb.GetParagraphsWithHrefsResponse
-		err      error
-	}{
-		{
-			input:    &pb.GetParagraphsWithHrefsRequest{ID: 1},
-			expected: &pb.GetParagraphsWithHrefsResponse{Paragraphs: []*pb.WriterParagraph{&pb.WriterParagraph{ID: 1, Content: "Содержимое <a id=\"dst101675\"></a> первого <a href='11111/a3a3a3/111'>параграфа</a>"}, &pb.WriterParagraph{ID: 2, Content: "Содержимое второго <a href='372952/4e92c731969781306ebd1095867d2385f83ac7af/335104'>пункта 5.14</a> параграфа"}, &pb.WriterParagraph{ID: 3, Content: "<a id='335050'></a>Содержимое третьего параграфа<a href='/document/cons_doc_LAW_2875/'>таблицей N 2</a>."}}},
-			err:      nil,
-		},
-	}
-
-	for _, test := range tests {
-		e, err := client.GetParagraphsWithHrefs(ctx, test.input)
-		if err != nil {
-			t.Log(err)
-		}
-		assert.Equal(test.err, err, err)
-
-		for i, t := range test.expected.Paragraphs {
-			assert.Equal(t.ID, e.Paragraphs[i].ID, i)
-			assert.Equal(t.Content, e.Paragraphs[i].Content, i)
-			assert.Equal(t.HasLinks, e.Paragraphs[i].HasLinks, i)
-
-		}
-
-	}
-
-	_, err = pgClient.Exec(ctx, resetDB)
-	if err != nil {
-		t.Log(err)
-	}
-}
-
-// GetRegulationIdByChapterId
-func TestGetRegulationIdByChapterId(t *testing.T) {
-	assert := assert.New(t)
-	pgClient := setupDB()
-	defer pgClient.Close()
-	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := pb.NewWriterGRPCClient(conn)
+	client := pb.NewWriterChapterGRPCClient(conn)
 	defer conn.Close()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -467,7 +164,7 @@ func TestGetRegulationIdByChapterId(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		e, err := client.GetRegulationIdByChapterId(ctx, test.input)
+		e, err := client.GetRegulationId(ctx, test.input)
 		if err != nil {
 			t.Log(err)
 		}

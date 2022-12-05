@@ -9,6 +9,7 @@ import (
 type RegulationStorage interface {
 	Create(ctx context.Context, regulation *pb.CreateRegulationRequest) (uint64, error)
 	Delete(ctx context.Context, regulationID uint64) error
+	GetAll(ctx context.Context) (regulations []*pb.WriterRegulation, err error)
 }
 
 type regulationService struct {
@@ -24,4 +25,7 @@ func (s *regulationService) Create(ctx context.Context, regulation *pb.CreateReg
 }
 func (s *regulationService) Delete(ctx context.Context, regulationID uint64) error {
 	return s.storage.Delete(ctx, regulationID)
+}
+func (s *regulationService) GetAll(ctx context.Context) (regulations []*pb.WriterRegulation, err error) {
+	return s.storage.GetAll(ctx)
 }

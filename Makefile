@@ -16,5 +16,5 @@ git:
 	git commit -a -m "$m"
 	git push -u origin main
 	
-mod:
-	cd app;go mod tidy
+update_contracts:
+	go get -u github.com/i-b8o/read-only_contracts@$m
