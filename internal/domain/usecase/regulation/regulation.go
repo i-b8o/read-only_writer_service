@@ -34,10 +34,13 @@ func (u *regulationUsecase) Create(ctx context.Context, regulation *pb.CreateReg
 	return u.regulationService.Create(ctx, regulation)
 }
 func (u *regulationUsecase) Delete(ctx context.Context, regulationID uint64) error {
+	// get all regulation`s chapters
 	chIDs, err := u.chapterService.GetAllById(ctx, regulationID)
 	if err != nil {
 		return err
 	}
+
+	// delete all paragraphs
 	for _, chID := range chIDs {
 		err := u.paragraphService.DeleteForChapter(ctx, chID)
 		if err != nil {
@@ -45,10 +48,13 @@ func (u *regulationUsecase) Delete(ctx context.Context, regulationID uint64) err
 		}
 	}
 
+	// delete all chapters
 	err = u.chapterService.DeleteAllForRegulation(ctx, regulationID)
 	if err != nil {
 		return err
 	}
+
+	// delete a regulation data
 	err = u.regulationService.Delete(ctx, regulationID)
 	if err != nil {
 		return err
