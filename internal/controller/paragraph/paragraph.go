@@ -10,6 +10,7 @@ import (
 type ParagraphUsecase interface {
 	CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error
 	UpdateOne(ctx context.Context, content string, paragraphID uint64) error
+	GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error)
 	DeleteForChapter(ctx context.Context, chapterID uint64) error
 	GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error)
 }
@@ -38,6 +39,16 @@ func (c *WriterParagraphGrpcController) Update(ctx context.Context, req *pb.Upda
 	content := req.GetContent()
 	err := c.paragraphUsecase.UpdateOne(ctx, content, ID)
 	return &pb.Empty{}, err
+
+}
+
+func (c *WriterParagraphGrpcController) GetOne(ctx context.Context, req *pb.GetOneParagraphRequest) (*pb.GetOneParagraphResponse, error) {
+	ID := req.GetID()
+	paragraphs, err := c.paragraphUsecase.GetOne(ctx, ID)
+	if err != nil {
+		return &pb.GetOneParagraphResponse{}, err
+	}
+	return &pb.GetOneParagraphResponse{Content: paragraphs.Content}, nil
 
 }
 

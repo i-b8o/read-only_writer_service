@@ -10,6 +10,7 @@ type ParagraphStorage interface {
 	CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error
 	UpdateOne(ctx context.Context, content string, paragraphID uint64) error
 	DeleteForChapter(ctx context.Context, chapterID uint64) error
+	GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error)
 	GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error)
 }
 
@@ -29,6 +30,9 @@ func (s *paragraphService) UpdateOne(ctx context.Context, content string, paragr
 }
 func (s *paragraphService) DeleteForChapter(ctx context.Context, chapterID uint64) error {
 	return s.storage.DeleteForChapter(ctx, chapterID)
+}
+func (s *paragraphService) GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error) {
+	return s.storage.GetOne(ctx, paragraphID)
 }
 func (s *paragraphService) GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error) {
 	return s.storage.GetWithHrefs(ctx, chapterID)

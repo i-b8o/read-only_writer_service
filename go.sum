@@ -58,6 +58,12 @@ github.com/i-b8o/read-only_contracts v0.0.0-20221205111806-18b6c0404ccb h1:6MRPT
 github.com/i-b8o/read-only_contracts v0.0.0-20221205111806-18b6c0404ccb/go.mod h1:+xArhQldMdQb+B4l1IFwRUmJNoTT1zJ4cx9vI765Qcc=
 github.com/i-b8o/read-only_contracts v0.0.0-20221205124016-70100563b393 h1:tupniGvBgSBX6jeHoHY3Ai3mG3BL4EpwqopRcHFXjXo=
 github.com/i-b8o/read-only_contracts v0.0.0-20221205124016-70100563b393/go.mod h1:+xArhQldMdQb+B4l1IFwRUmJNoTT1zJ4cx9vI765Qcc=
+github.com/i-b8o/read-only_contracts v0.0.0-20221207071453-7efdd47b9849 h1:F5S7S4p5YAE8lL3e+Hp2EJQbo5actMuACV6oJUIBqi4=
+github.com/i-b8o/read-only_contracts v0.0.0-20221207071453-7efdd47b9849/go.mod h1:+xArhQldMdQb+B4l1IFwRUmJNoTT1zJ4cx9vI765Qcc=
+github.com/i-b8o/read-only_contracts v0.0.0-20221207073621-3f6dfb900bbb h1:qlYYqyYEHPBsoa3Fr+NeGuLWEO7A9a0+finJrNV/X/I=
+github.com/i-b8o/read-only_contracts v0.0.0-20221207073621-3f6dfb900bbb/go.mod h1:+xArhQldMdQb+B4l1IFwRUmJNoTT1zJ4cx9vI765Qcc=
+github.com/i-b8o/read-only_contracts v0.0.0-20221207073831-ede450d11962 h1:hyOkij0ku3GweoBF1E40N8tb+5YVOmT+WiUSCcpXDRI=
+github.com/i-b8o/read-only_contracts v0.0.0-20221207073831-ede450d11962/go.mod h1:+xArhQldMdQb+B4l1IFwRUmJNoTT1zJ4cx9vI765Qcc=
 github.com/i-b8o/regulations_contracts v0.0.0-20221121063902-757cbbc92d43 h1:u/q8HADbNXvluGKQmnjLhMfO8r0MoLHFVoKs6IaMeHo=
 github.com/i-b8o/regulations_contracts v0.0.0-20221121063902-757cbbc92d43/go.mod h1:BJfjDZHBG93j5H2JEnV2qUYJhUQT41kBKGNICqQcT/4=
 github.com/ilyakaznacheev/cleanenv v1.4.0 h1:Gvwxt6wAPUo9OOxyp5Xz9eqhLsAey4AtbCF5zevDnvs=

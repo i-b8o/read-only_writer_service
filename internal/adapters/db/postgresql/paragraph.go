@@ -73,6 +73,19 @@ func (ps *paragraphStorage) DeleteForChapter(ctx context.Context, chapterID uint
 	return err
 }
 
+// Delete
+func (ps *paragraphStorage) GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error) {
+	const sql = `SELECT content FROM paragraph WHERE id=$1`
+	row := ps.client.QueryRow(ctx, sql, paragraphID)
+	paragraph := &pb.WriterParagraph{}
+	err := row.Scan(&paragraph.Content)
+	if err != nil {
+		return paragraph, err
+	}
+	return paragraph, nil
+
+}
+
 func (ps *paragraphStorage) GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error) {
 	const sql = `SELECT paragraph_id, content FROM "paragraph" WHERE c_id = $1 AND has_links=true`
 

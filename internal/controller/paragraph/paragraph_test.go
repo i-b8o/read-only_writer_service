@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -100,6 +101,49 @@ func TestCreateAll(t *testing.T) {
 
 	}
 
+	_, err = pgClient.Exec(ctx, resetDB)
+	if err != nil {
+		t.Log(err)
+	}
+}
+
+func TestGetOne(t *testing.T) {
+	assert := assert.New(t)
+	pgClient := setupDB()
+	defer pgClient.Close()
+	conn, err := grpc.Dial(
+		fmt.Sprintf("%s:%s", "0.0.0.0", "30001"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := pb.NewWriterParagraphGRPCClient(conn)
+	defer conn.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tests := []struct {
+		input    *pb.GetOneParagraphRequest
+		expected *pb.GetOneParagraphResponse
+		err      error
+	}{
+		{
+			input:    &pb.GetOneParagraphRequest{ID: 1},
+			expected: &pb.GetOneParagraphResponse{Content: "Содержимое <a id=\"dst101675\"></a> первого <a href='11111/a3a3a3/111'>параграфа</a>"},
+			err:      nil,
+		},
+	}
+
+	for _, test := range tests {
+		resp, err := client.GetOne(ctx, test.input)
+		if err != nil {
+			t.Log(err)
+		}
+		assert.Equal(test.err, err)
+		assert.True(proto.Equal(test.expected, resp))
+
+	}
 	_, err = pgClient.Exec(ctx, resetDB)
 	if err != nil {
 		t.Log(err)

@@ -9,6 +9,7 @@ import (
 type ParagraphService interface {
 	CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error
 	DeleteForChapter(ctx context.Context, chapterID uint64) error
+	GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error)
 	GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error)
 	UpdateOne(ctx context.Context, content string, paragraphID uint64) error
 }
@@ -27,6 +28,10 @@ func (u *paragraphUsecase) CreateAll(ctx context.Context, paragraphs []*pb.Write
 
 func (u *paragraphUsecase) DeleteForChapter(ctx context.Context, chapterID uint64) error {
 	return u.service.DeleteForChapter(ctx, chapterID)
+}
+
+func (u *paragraphUsecase) GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error) {
+	return u.service.GetOne(ctx, paragraphID)
 }
 
 func (u *paragraphUsecase) GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error) {
