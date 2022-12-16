@@ -10,7 +10,7 @@ grpc:
 
 postgresql:
   host: 0.0.0.0
-  port: "5437"
+  port: "5432"
   username: writer
   database: main
   password: 031501

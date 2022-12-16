@@ -1,4 +1,4 @@
-APP_BIN = app/build/app
+APP_BIN = build/writer
 
 lint:
 	golangci-lint run
@@ -6,10 +6,10 @@ lint:
 build: clean $(APP_BIN)
 
 $(APP_BIN):
-	go build -o $(APP_BIN) ./app/cmd/main.go
+	go build -o $(APP_BIN) ./cmd/main.go
 
 clean:
-	rm -rf ./app/build || true
+	rm -rf ./build || true
 
 git:
 	git add .
