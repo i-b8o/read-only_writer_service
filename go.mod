@@ -4,11 +4,10 @@ go 1.19
 
 require (
 	github.com/i-b8o/logging v0.0.0-20221105180025-715df517e91e
-	github.com/i-b8o/read-only_contracts v0.0.0-20221220051237-fed4344596b0
+	github.com/i-b8o/read-only_contracts v0.0.0-20221220170407-0ab77da2c099
 	github.com/ilyakaznacheev/cleanenv v1.4.0
 	github.com/jackc/pgconn v1.13.0
 	github.com/jackc/pgx/v4 v4.17.2
-	github.com/julienschmidt/httprouter v1.3.0
 	github.com/stretchr/testify v1.8.0
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.27.1
