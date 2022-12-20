@@ -12,8 +12,8 @@ import (
 
 type ChapterUsecase interface {
 	Create(ctx context.Context, chapter *pb.CreateChapterRequest) (uint64, error)
-	GetAllById(ctx context.Context, regulationID uint64) ([]uint64, error)
-	GetRegulationId(ctx context.Context, chapterID uint64) (uint64, error)
+	GetAllById(ctx context.Context, DocID uint64) ([]uint64, error)
+	GetDocId(ctx context.Context, chapterID uint64) (uint64, error)
 }
 
 type WriterChapterGrpcController struct {
@@ -46,12 +46,12 @@ func (c *WriterChapterGrpcController) GetAll(ctx context.Context, req *pb.GetAll
 	return &pb.GetAllChaptersIdsResponse{IDs: IDs}, nil
 }
 
-func (c *WriterChapterGrpcController) GetRegulationId(ctx context.Context, req *pb.GetRegulationIdByChapterIdRequest) (*pb.GetRegulationIdByChapterIdResponse, error) {
+func (c *WriterChapterGrpcController) GetDocId(ctx context.Context, req *pb.GetDocIdByChapterIdRequest) (*pb.GetDocIdByChapterIdResponse, error) {
 	ID := req.GetID()
-	regId, err := c.chapterUsecase.GetRegulationId(ctx, ID)
+	regId, err := c.chapterUsecase.GetDocId(ctx, ID)
 	if err != nil {
 		err := status.Errorf(codes.NotFound, fmt.Sprintf("no rows in result set: %d", ID))
-		return &pb.GetRegulationIdByChapterIdResponse{}, err
+		return &pb.GetDocIdByChapterIdResponse{}, err
 	}
-	return &pb.GetRegulationIdByChapterIdResponse{ID: regId}, nil
+	return &pb.GetDocIdByChapterIdResponse{ID: regId}, nil
 }

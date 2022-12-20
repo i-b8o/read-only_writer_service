@@ -8,9 +8,9 @@ import (
 
 type ChapterStorage interface {
 	Create(ctx context.Context, chapter *pb.CreateChapterRequest) (uint64, error)
-	DeleteAllForRegulation(ctx context.Context, regulationID uint64) error
-	GetAllById(ctx context.Context, regulationID uint64) ([]uint64, error)
-	GetRegulationId(ctx context.Context, chapterID uint64) (uint64, error)
+	DeleteAllForDoc(ctx context.Context, docID uint64) error
+	GetAllById(ctx context.Context, docID uint64) ([]uint64, error)
+	GetDocId(ctx context.Context, chapterID uint64) (uint64, error)
 }
 
 type chapterService struct {
@@ -25,14 +25,14 @@ func (s *chapterService) Create(ctx context.Context, chapter *pb.CreateChapterRe
 	return s.storage.Create(ctx, chapter)
 }
 
-func (s *chapterService) DeleteAllForRegulation(ctx context.Context, regulationID uint64) error {
-	return s.storage.DeleteAllForRegulation(ctx, regulationID)
+func (s *chapterService) DeleteAllForDoc(ctx context.Context, docID uint64) error {
+	return s.storage.DeleteAllForDoc(ctx, docID)
 }
 
-func (s *chapterService) GetAllById(ctx context.Context, regulationID uint64) ([]uint64, error) {
-	return s.storage.GetAllById(ctx, regulationID)
+func (s *chapterService) GetAllById(ctx context.Context, docID uint64) ([]uint64, error) {
+	return s.storage.GetAllById(ctx, docID)
 }
 
-func (s *chapterService) GetRegulationId(ctx context.Context, chapterID uint64) (uint64, error) {
-	return s.storage.GetRegulationId(ctx, chapterID)
+func (s *chapterService) GetDocId(ctx context.Context, chapterID uint64) (uint64, error) {
+	return s.storage.GetDocId(ctx, chapterID)
 }

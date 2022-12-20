@@ -6,13 +6,13 @@ import (
 	"net"
 	"read-only_writer_service/internal/config"
 	chapter_controller "read-only_writer_service/internal/controller/chapter"
+	doc_controller "read-only_writer_service/internal/controller/doc"
 	paragraph_controller "read-only_writer_service/internal/controller/paragraph"
-	regulation_controller "read-only_writer_service/internal/controller/regulation"
 	postgressql "read-only_writer_service/internal/data_providers/db/postgresql"
 	"read-only_writer_service/internal/domain/service"
 	chapter_usecase "read-only_writer_service/internal/domain/usecase/chapter"
+	doc_usecase "read-only_writer_service/internal/domain/usecase/doc"
 	paragraph_usecase "read-only_writer_service/internal/domain/usecase/paragraph"
-	regulation_usecase "read-only_writer_service/internal/domain/usecase/regulation"
 	"read-only_writer_service/pkg/client/postgresql"
 	"time"
 
@@ -40,21 +40,21 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	regAdapter := postgressql.NewRegulationStorage(pgClient)
+	regAdapter := postgressql.NewDocStorage(pgClient)
 	chapterAdapter := postgressql.NewChapterStorage(pgClient)
 	paragraphAdapter := postgressql.NewParagraphStorage(pgClient)
 
-	regulationService := service.NewRegulationService(regAdapter)
+	docService := service.NewDocService(regAdapter)
 	chapterService := service.NewChapterService(chapterAdapter)
 	paragraphService := service.NewParagraphService(paragraphAdapter)
 
-	regulationUsecase := regulation_usecase.NewRegulationUsecase(regulationService, chapterService, paragraphService)
+	docUsecase := doc_usecase.NewDocUsecase(docService, chapterService, paragraphService)
 	chapterUsecase := chapter_usecase.NewChapterUsecase(chapterService)
 	paragraphUsecase := paragraph_usecase.NewParagraphUsecase(paragraphService)
 
-	regulationGrpcService := regulation_controller.NewWriterRegulationGrpcController(regulationUsecase, logger)
+	docGrpcService := doc_controller.NewWriterDocGrpcController(docUsecase, logger)
 	chapterGrpcService := chapter_controller.NewWriterChapterGrpcController(chapterUsecase, logger)
-	paragraphGrpcService := paragraph_controller.NewWritableRegulationGRPCService(paragraphUsecase, logger)
+	paragraphGrpcService := paragraph_controller.NewWritableDocGRPCService(paragraphUsecase, logger)
 	// read ca's cert, verify to client's certificate
 	// homeDir, err := os.UserHomeDir()
 	// if err != nil {
@@ -89,7 +89,7 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 
 	// grpcServer := grpc.NewServer(grpc.Creds(tlsCredentials))
 	grpcServer := grpc.NewServer()
-	pb_writable.RegisterWriterRegulationGRPCServer(grpcServer, regulationGrpcService)
+	pb_writable.RegisterWriterDocGRPCServer(grpcServer, docGrpcService)
 	pb_writable.RegisterWriterChapterGRPCServer(grpcServer, chapterGrpcService)
 	pb_writable.RegisterWriterParagraphGRPCServer(grpcServer, paragraphGrpcService)
 

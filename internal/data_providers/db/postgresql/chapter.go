@@ -20,9 +20,9 @@ func NewChapterStorage(client client.PostgreSQLClient) *chapterStorage {
 
 // Create returns the ID of the inserted chapter
 func (cs *chapterStorage) Create(ctx context.Context, chapter *pb.CreateChapterRequest) (uint64, error) {
-	const sql = `INSERT INTO chapter ("name", "num", "order_num","r_id") VALUES ($1,$2,$3,$4) RETURNING "id"`
+	const sql = `INSERT INTO chapter ("name", "num", "order_num","doc_id") VALUES ($1,$2,$3,$4) RETURNING "id"`
 
-	row := cs.client.QueryRow(ctx, sql, chapter.Name, chapter.Num, chapter.OrderNum, chapter.RegulationID)
+	row := cs.client.QueryRow(ctx, sql, chapter.Name, chapter.Num, chapter.OrderNum, chapter.DocID)
 
 	var chapterID uint64
 
@@ -36,9 +36,9 @@ func (cs *chapterStorage) Create(ctx context.Context, chapter *pb.CreateChapterR
 }
 
 // Delete
-func (cs *chapterStorage) DeleteAllForRegulation(ctx context.Context, regulationID uint64) error {
-	const sql1 = `delete from chapter where r_id=$1`
-	_, err := cs.client.Exec(ctx, sql1, regulationID)
+func (cs *chapterStorage) DeleteAllForDoc(ctx context.Context, docID uint64) error {
+	const sql1 = `delete from chapter where doc_id=$1`
+	_, err := cs.client.Exec(ctx, sql1, docID)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		return fmt.Errorf("message: %s, code: %s", pgErr.Message, pgErr.Code)
@@ -48,12 +48,12 @@ func (cs *chapterStorage) DeleteAllForRegulation(ctx context.Context, regulation
 }
 
 // GetAllById returns all chapter associated with the given ID
-func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) ([]uint64, error) {
-	const sql = `SELECT id FROM "chapter" WHERE r_id = $1 ORDER BY order_num`
+func (cs *chapterStorage) GetAllById(ctx context.Context, docID uint64) ([]uint64, error) {
+	const sql = `SELECT id FROM "chapter" WHERE doc_id = $1 ORDER BY order_num`
 
 	var IDs []uint64
 
-	rows, err := cs.client.Query(ctx, sql, regulationID)
+	rows, err := cs.client.Query(ctx, sql, docID)
 	if err != nil {
 		return nil, err
 	}
@@ -75,8 +75,8 @@ func (cs *chapterStorage) GetAllById(ctx context.Context, regulationID uint64) (
 }
 
 // GetOneById returns an chapter associated with the given ID
-func (cs *chapterStorage) GetRegulationId(ctx context.Context, chapterID uint64) (uint64, error) {
-	const sql = `SELECT r_id FROM "chapter" WHERE id = $1`
+func (cs *chapterStorage) GetDocId(ctx context.Context, chapterID uint64) (uint64, error) {
+	const sql = `SELECT doc_id FROM "chapter" WHERE id = $1`
 	row := cs.client.QueryRow(ctx, sql, chapterID)
 	var ID uint64
 	err := row.Scan(&ID)

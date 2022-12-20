@@ -21,7 +21,7 @@ type WriterParagraphGrpcController struct {
 	pb.UnimplementedWriterParagraphGRPCServer
 }
 
-func NewWritableRegulationGRPCService(paragraphStorage ParagraphUsecase, loging logging.Logger) *WriterParagraphGrpcController {
+func NewWritableDocGRPCService(paragraphStorage ParagraphUsecase, loging logging.Logger) *WriterParagraphGrpcController {
 	return &WriterParagraphGrpcController{
 		paragraphUsecase: paragraphStorage,
 		logging:          loging,
