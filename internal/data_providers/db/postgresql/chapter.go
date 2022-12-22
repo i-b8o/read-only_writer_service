@@ -20,9 +20,9 @@ func NewChapterStorage(client client.PostgreSQLClient) *chapterStorage {
 
 // Create returns the ID of the inserted chapter
 func (cs *chapterStorage) Create(ctx context.Context, chapter *pb.CreateChapterRequest) (uint64, error) {
-	const sql = `INSERT INTO chapter ("name", "num", "order_num","doc_id") VALUES ($1,$2,$3,$4) RETURNING "id"`
+	const sql = `INSERT INTO chapter ("name", "num", "order_num","doc_id", "title",	"description", "keywords") VALUES ($1,$2,$3,$4) RETURNING "id"`
 
-	row := cs.client.QueryRow(ctx, sql, chapter.Name, chapter.Num, chapter.OrderNum, chapter.DocID)
+	row := cs.client.QueryRow(ctx, sql, chapter.Name, chapter.Num, chapter.OrderNum, chapter.DocID, chapter.Title, chapter.Description, chapter.Keywords)
 
 	var chapterID uint64
 

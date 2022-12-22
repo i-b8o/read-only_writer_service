@@ -23,9 +23,9 @@ func NewDocStorage(client client.PostgreSQLClient) *docStorage {
 func (rs *docStorage) Create(ctx context.Context, doc *pb.CreateDocRequest) (uint64, error) {
 	t := time.Now()
 
-	const sql = `INSERT INTO doc ("name", "abbreviation", "header", "created_at") VALUES ($1, $2, $3, $4) RETURNING "id"`
+	const sql = `INSERT INTO doc ("name", "abbreviation", "header", "title", "description", "keywords", "created_at") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING "id"`
 
-	row := rs.client.QueryRow(ctx, sql, doc.Name, doc.Abbreviation, doc.Title, t)
+	row := rs.client.QueryRow(ctx, sql, doc.Name, doc.Abbreviation, doc.Header, doc.Title, doc.Description, doc.Keywords, t)
 	var docID uint64
 
 	err := row.Scan(&docID)
