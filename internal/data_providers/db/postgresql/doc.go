@@ -23,9 +23,9 @@ func NewDocStorage(client client.PostgreSQLClient) *docStorage {
 func (rs *docStorage) Create(ctx context.Context, doc *pb.CreateDocRequest) (uint64, error) {
 	t := time.Now()
 
-	const sql = `INSERT INTO doc ("name", "abbreviation", "header", "title", "description", "keywords", "created_at") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING "id"`
+	const sql = `INSERT INTO doc ("name", "type", "title", "description", "keywords", "created_at") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"`
 
-	row := rs.client.QueryRow(ctx, sql, doc.Name, doc.Abbreviation, doc.Header, doc.Title, doc.Description, doc.Keywords, t)
+	row := rs.client.QueryRow(ctx, sql, doc.Name, doc.Type, doc.Title, doc.Description, doc.Keywords, t)
 	var docID uint64
 
 	err := row.Scan(&docID)
@@ -51,7 +51,7 @@ func (rs *docStorage) Delete(ctx context.Context, docID uint64) error {
 
 // GetAll
 func (rs *docStorage) GetAll(ctx context.Context) (docs []*pb.WriterDoc, err error) {
-	const sql = `SELECT id, name, abbreviation, title FROM "doc"`
+	const sql = `SELECT id, name, type, abbreviation, title FROM "doc"`
 
 	rows, err := rs.client.Query(ctx, sql)
 	if err != nil {
@@ -62,7 +62,7 @@ func (rs *docStorage) GetAll(ctx context.Context) (docs []*pb.WriterDoc, err err
 	for rows.Next() {
 		var doc pb.WriterDoc
 		if err = rows.Scan(
-			&doc.ID, &doc.Name, &doc.Abbreviation, &doc.Title,
+			&doc.ID, &doc.Name, &doc.Type, &doc.Abbreviation, &doc.Title,
 		); err != nil {
 			return nil, err
 		}

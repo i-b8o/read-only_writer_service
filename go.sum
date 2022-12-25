@@ -56,6 +56,10 @@ github.com/i-b8o/read-only_contracts v0.0.0-20221222174353-e23d6b14a677 h1:70FEF
 github.com/i-b8o/read-only_contracts v0.0.0-20221222174353-e23d6b14a677/go.mod h1:+xArhQldMdQb+B4l1IFwRUmJNoTT1zJ4cx9vI765Qcc=
 github.com/i-b8o/read-only_contracts v0.0.0-20221222181544-e7f6bd47acd0 h1:yHyuKzuZ63UJ3TvjwlLcaPfnL3rTskxR92ySNOMXdHE=
 github.com/i-b8o/read-only_contracts v0.0.0-20221222181544-e7f6bd47acd0/go.mod h1:+xArhQldMdQb+B4l1IFwRUmJNoTT1zJ4cx9vI765Qcc=
+github.com/i-b8o/read-only_contracts v0.0.0-20221224171458-f795530200c6 h1:Yry3aLjeafGaoc5uYXAtNc2xSgomWVD3trVBBT0Asgo=
+github.com/i-b8o/read-only_contracts v0.0.0-20221224171458-f795530200c6/go.mod h1:+xArhQldMdQb+B4l1IFwRUmJNoTT1zJ4cx9vI765Qcc=
+github.com/i-b8o/read-only_contracts v0.0.0-20221225114741-5d85f3e0ad58 h1:B/KIkMHxGr8gaFYZE8T+Py9WLxCdDbT55qkwNHIbTos=
+github.com/i-b8o/read-only_contracts v0.0.0-20221225114741-5d85f3e0ad58/go.mod h1:+xArhQldMdQb+B4l1IFwRUmJNoTT1zJ4cx9vI765Qcc=
 github.com/ilyakaznacheev/cleanenv v1.4.0 h1:Gvwxt6wAPUo9OOxyp5Xz9eqhLsAey4AtbCF5zevDnvs=
 github.com/ilyakaznacheev/cleanenv v1.4.0/go.mod h1:i0owW+HDxeGKE0/JPREJOdSCPIyOnmh6C0xhWAkF/xA=
 github.com/jackc/chunkreader v1.0.0/go.mod h1:RT6O25fNZIuasFJRyZ4R/Y2BbhasbmZXF9QQ7T3kePo=
