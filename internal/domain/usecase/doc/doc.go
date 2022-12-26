@@ -6,8 +6,16 @@ import (
 	pb "github.com/i-b8o/read-only_contracts/pb/writer/v1"
 )
 
+type TypeService interface {
+	Create(ctx context.Context, typeName string) (uint64, error)
+}
+
+type SubTypeService interface {
+	Create(ctx context.Context, subTypeName string, typeID uint64) (uint64, error)
+}
+
 type DocService interface {
-	Create(ctx context.Context, doc *pb.CreateDocRequest) (uint64, error)
+	Create(ctx context.Context, doc *pb.CreateDocRequest, subtype_id uint64) (uint64, error)
 	Delete(ctx context.Context, docID uint64) error
 	GetAll(ctx context.Context) (docs []*pb.WriterDoc, err error)
 }
@@ -22,19 +30,30 @@ type ParagraphService interface {
 }
 
 type docUsecase struct {
+	typeService      TypeService
+	subTypeService   SubTypeService
 	docService       DocService
 	chapterService   ChapterService
 	paragraphService ParagraphService
 }
 
-func NewDocUsecase(docService DocService, chapterService ChapterService, paragraphService ParagraphService) *docUsecase {
-	return &docUsecase{docService: docService, chapterService: chapterService, paragraphService: paragraphService}
+func NewDocUsecase(typeService TypeService, subTypeService SubTypeService, docService DocService, chapterService ChapterService, paragraphService ParagraphService) *docUsecase {
+	return &docUsecase{typeService: typeService, subTypeService: subTypeService, docService: docService, chapterService: chapterService, paragraphService: paragraphService}
 }
 func (u *docUsecase) GetAll(ctx context.Context) (docs []*pb.WriterDoc, err error) {
 	return u.docService.GetAll(ctx)
 }
 func (u *docUsecase) Create(ctx context.Context, doc *pb.CreateDocRequest) (uint64, error) {
-	return u.docService.Create(ctx, doc)
+	typeID, err := u.typeService.Create(ctx, doc.Type)
+	if err != nil {
+		return 0, err
+	}
+
+	subTypeID, err := u.subTypeService.Create(ctx, doc.SubType, typeID)
+	if err != nil {
+		return 0, err
+	}
+	return u.docService.Create(ctx, doc, subTypeID)
 }
 func (u *docUsecase) Delete(ctx context.Context, docID uint64) error {
 	// get all doc`s chapters

@@ -40,15 +40,19 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	regAdapter := postgressql.NewDocStorage(pgClient)
+	typeAdapter := postgressql.NewTypeStorage(pgClient)
+	subTypeAdapter := postgressql.NewSubTypeStorage(pgClient)
+	docAdapter := postgressql.NewDocStorage(pgClient)
 	chapterAdapter := postgressql.NewChapterStorage(pgClient)
 	paragraphAdapter := postgressql.NewParagraphStorage(pgClient)
 
-	docService := service.NewDocService(regAdapter)
+	typeService := service.NewTypeService(typeAdapter)
+	subTypeService := service.NewSubTypeService(subTypeAdapter)
+	docService := service.NewDocService(docAdapter)
 	chapterService := service.NewChapterService(chapterAdapter)
 	paragraphService := service.NewParagraphService(paragraphAdapter)
 
-	docUsecase := doc_usecase.NewDocUsecase(docService, chapterService, paragraphService)
+	docUsecase := doc_usecase.NewDocUsecase(typeService, subTypeService, docService, chapterService, paragraphService)
 	chapterUsecase := chapter_usecase.NewChapterUsecase(chapterService)
 	paragraphUsecase := paragraph_usecase.NewParagraphUsecase(paragraphService)
 
