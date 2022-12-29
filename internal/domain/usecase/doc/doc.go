@@ -16,6 +16,7 @@ type SubTypeService interface {
 
 type SubTypeDocService interface {
 	Create(ctx context.Context, subTypeID, docID uint64) error
+	Delete(ctx context.Context, docID uint64) error
 }
 
 type DocService interface {
@@ -82,6 +83,12 @@ func (u *docUsecase) Delete(ctx context.Context, docID uint64) error {
 
 	// delete all chapters
 	err = u.chapterService.DeleteAllForDoc(ctx, docID)
+	if err != nil {
+		return err
+	}
+
+	// delete subtype_doc
+	err = u.subTypeDocService.Delete(ctx, docID)
 	if err != nil {
 		return err
 	}

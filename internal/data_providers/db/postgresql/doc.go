@@ -50,7 +50,7 @@ func (rs *docStorage) Delete(ctx context.Context, docID uint64) error {
 
 // GetAll
 func (rs *docStorage) GetAll(ctx context.Context) (docs []*pb.WriterDoc, err error) {
-	const sql = `SELECT id, name, type, title FROM "doc"`
+	const sql = `SELECT id, name, title FROM "doc"`
 
 	rows, err := rs.client.Query(ctx, sql)
 	if err != nil {
@@ -61,7 +61,7 @@ func (rs *docStorage) GetAll(ctx context.Context) (docs []*pb.WriterDoc, err err
 	for rows.Next() {
 		var doc pb.WriterDoc
 		if err = rows.Scan(
-			&doc.ID, &doc.Name, &doc.Type, &doc.Title,
+			&doc.ID, &doc.Name, &doc.Title,
 		); err != nil {
 			return nil, err
 		}
