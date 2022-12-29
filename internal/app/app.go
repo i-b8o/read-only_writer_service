@@ -10,9 +10,9 @@ import (
 	paragraph_controller "read-only_writer_service/internal/controller/paragraph"
 	postgressql "read-only_writer_service/internal/data_providers/db/postgresql"
 	"read-only_writer_service/internal/domain/service"
-	chapter_usecase "read-only_writer_service/internal/domain/usecase/chapter"
+
 	doc_usecase "read-only_writer_service/internal/domain/usecase/doc"
-	paragraph_usecase "read-only_writer_service/internal/domain/usecase/paragraph"
+
 	"read-only_writer_service/pkg/client/postgresql"
 	"time"
 
@@ -53,12 +53,10 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	paragraphService := service.NewParagraphService(paragraphAdapter)
 
 	docUsecase := doc_usecase.NewDocUsecase(typeService, subTypeService, docService, chapterService, paragraphService)
-	chapterUsecase := chapter_usecase.NewChapterUsecase(chapterService)
-	paragraphUsecase := paragraph_usecase.NewParagraphUsecase(paragraphService)
 
 	docGrpcService := doc_controller.NewWriterDocGrpcController(docUsecase, logger)
-	chapterGrpcService := chapter_controller.NewWriterChapterGrpcController(chapterUsecase, logger)
-	paragraphGrpcService := paragraph_controller.NewWritableDocGRPCService(paragraphUsecase, logger)
+	chapterGrpcService := chapter_controller.NewWriterChapterGrpcController(chapterService, logger)
+	paragraphGrpcService := paragraph_controller.NewWritableDocGRPCService(paragraphService, logger)
 	// read ca's cert, verify to client's certificate
 	// homeDir, err := os.UserHomeDir()
 	// if err != nil {

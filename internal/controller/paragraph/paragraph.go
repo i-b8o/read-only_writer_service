@@ -7,7 +7,7 @@ import (
 	pb "github.com/i-b8o/read-only_contracts/pb/writer/v1"
 )
 
-type ParagraphUsecase interface {
+type ParagraphService interface {
 	CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error
 	UpdateOne(ctx context.Context, content string, paragraphID uint64) error
 	GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error)
@@ -16,35 +16,35 @@ type ParagraphUsecase interface {
 }
 
 type WriterParagraphGrpcController struct {
-	paragraphUsecase ParagraphUsecase
+	paragraphService ParagraphService
 	logging          logging.Logger
 	pb.UnimplementedWriterParagraphGRPCServer
 }
 
-func NewWritableDocGRPCService(paragraphStorage ParagraphUsecase, loging logging.Logger) *WriterParagraphGrpcController {
+func NewWritableDocGRPCService(paragraphStorage ParagraphService, loging logging.Logger) *WriterParagraphGrpcController {
 	return &WriterParagraphGrpcController{
-		paragraphUsecase: paragraphStorage,
+		paragraphService: paragraphStorage,
 		logging:          loging,
 	}
 }
 
 func (c *WriterParagraphGrpcController) CreateAll(ctx context.Context, req *pb.CreateAllParagraphsRequest) (*pb.Empty, error) {
 	paragraphs := req.GetParagraphs()
-	err := c.paragraphUsecase.CreateAll(ctx, paragraphs)
+	err := c.paragraphService.CreateAll(ctx, paragraphs)
 	return &pb.Empty{}, err
 }
 
 func (c *WriterParagraphGrpcController) Update(ctx context.Context, req *pb.UpdateOneParagraphRequest) (*pb.Empty, error) {
 	ID := req.GetID()
 	content := req.GetContent()
-	err := c.paragraphUsecase.UpdateOne(ctx, content, ID)
+	err := c.paragraphService.UpdateOne(ctx, content, ID)
 	return &pb.Empty{}, err
 
 }
 
 func (c *WriterParagraphGrpcController) GetOne(ctx context.Context, req *pb.GetOneParagraphRequest) (*pb.GetOneParagraphResponse, error) {
 	ID := req.GetID()
-	paragraphs, err := c.paragraphUsecase.GetOne(ctx, ID)
+	paragraphs, err := c.paragraphService.GetOne(ctx, ID)
 	if err != nil {
 		return &pb.GetOneParagraphResponse{}, err
 	}
@@ -54,7 +54,7 @@ func (c *WriterParagraphGrpcController) GetOne(ctx context.Context, req *pb.GetO
 
 func (c *WriterParagraphGrpcController) GetWithHrefs(ctx context.Context, req *pb.GetParagraphsWithHrefsRequest) (*pb.GetParagraphsWithHrefsResponse, error) {
 	ID := req.GetID()
-	paragraphs, err := c.paragraphUsecase.GetWithHrefs(ctx, ID)
+	paragraphs, err := c.paragraphService.GetWithHrefs(ctx, ID)
 	if err != nil {
 		return &pb.GetParagraphsWithHrefsResponse{}, err
 	}
