@@ -18,6 +18,29 @@ func NewParagraphStorage(client client.PostgreSQLClient) *paragraphStorage {
 	return &paragraphStorage{client: client}
 }
 
+func (ps *paragraphStorage) Check(ctx context.Context, id uint64) (bool, error) {
+	const sql = `select id from paragraph where id = $1 limit 1`
+	var IDs []uint64
+	rows, err := ps.client.Query(ctx, sql, id)
+	if err != nil {
+		return true, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var ID uint64
+		if err = rows.Scan(
+			&ID,
+		); err != nil {
+			return true, err
+		}
+
+		IDs = append(IDs, ID)
+	}
+	return len(IDs) > 0, nil
+}
+
 // CreateAll
 func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error {
 	vals := []interface{}{}
