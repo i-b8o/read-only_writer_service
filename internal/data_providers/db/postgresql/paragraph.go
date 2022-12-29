@@ -67,7 +67,7 @@ func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.Writ
 }
 
 func (ps *paragraphStorage) UpdateOne(ctx context.Context, content string, paragraphID uint64) error {
-	const sql = `UPDATE "paragraph" SET content = $1 WHERE paragraph_id = $2 RETURNING "id"`
+	const sql = `UPDATE "paragraph" SET content = $1 WHERE id = $2 RETURNING "id"`
 	row := ps.client.QueryRow(ctx, sql, content, paragraphID)
 	var ID uint64
 
@@ -98,7 +98,7 @@ func (ps *paragraphStorage) DeleteForChapter(ctx context.Context, chapterID uint
 
 // Delete
 func (ps *paragraphStorage) GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error) {
-	const sql = `SELECT content FROM paragraph WHERE paragraph_id=$1`
+	const sql = `SELECT content FROM paragraph WHERE id=$1`
 	row := ps.client.QueryRow(ctx, sql, paragraphID)
 	paragraph := &pb.WriterParagraph{}
 	err := row.Scan(&paragraph.Content)
@@ -110,7 +110,7 @@ func (ps *paragraphStorage) GetOne(ctx context.Context, paragraphID uint64) (*pb
 }
 
 func (ps *paragraphStorage) GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error) {
-	const sql = `SELECT paragraph_id, content FROM "paragraph" WHERE c_id = $1 AND has_links=true`
+	const sql = `SELECT id, content FROM "paragraph" WHERE c_id = $1 AND has_links=true`
 
 	var paragraphs []*pb.WriterParagraph
 
