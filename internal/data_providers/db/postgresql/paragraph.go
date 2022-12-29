@@ -21,7 +21,7 @@ func NewParagraphStorage(client client.PostgreSQLClient) *paragraphStorage {
 // CreateAll
 func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error {
 	vals := []interface{}{}
-	sql := `INSERT INTO paragraph ("paragraph_id","order_num","is_table","is_nft","has_links","class","content","c_id") VALUES `
+	sql := `INSERT INTO paragraph ("id","order_num","is_table","is_nft","has_links","class","content","c_id") VALUES `
 	i := 1
 	for _, p := range paragraphs {
 		sql += fmt.Sprintf("($%d, $%d, $%d , $%d, $%d, $%d, $%d, $%d),", i, i+1, i+2, i+3, i+4, i+5, i+6, i+7)
