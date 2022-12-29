@@ -20,7 +20,7 @@ func NewSubTypeStorage(client client.PostgreSQLClient) *subTypeStorage {
 // Create returns the ID of the inserted type
 func (rs *subTypeStorage) Create(ctx context.Context, name string, typeID uint64) (uint64, error) {
 
-	const sql = `INSERT INTO subtype ("name", "type_id") VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET name=EXCLUDED.name RETURNING "id";`
+	const sql = `INSERT INTO subtype ("name", "type_id") VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET name=EXCLUDED.name RETURNING "id"`
 
 	row := rs.client.QueryRow(ctx, sql, name, typeID)
 	var subTypeID uint64

@@ -14,8 +14,12 @@ type SubTypeService interface {
 	Create(ctx context.Context, subTypeName string, typeID uint64) (uint64, error)
 }
 
+type SubTypeDocService interface {
+	Create(ctx context.Context, subTypeID, docID uint64) error
+}
+
 type DocService interface {
-	Create(ctx context.Context, doc *pb.CreateDocRequest, subtype_id uint64) (uint64, error)
+	Create(ctx context.Context, doc *pb.CreateDocRequest) (uint64, error)
 	Delete(ctx context.Context, docID uint64) error
 	GetAll(ctx context.Context) (docs []*pb.WriterDoc, err error)
 }
@@ -30,15 +34,16 @@ type ParagraphService interface {
 }
 
 type docUsecase struct {
-	typeService      TypeService
-	subTypeService   SubTypeService
-	docService       DocService
-	chapterService   ChapterService
-	paragraphService ParagraphService
+	typeService       TypeService
+	subTypeService    SubTypeService
+	docService        DocService
+	subTypeDocService SubTypeDocService
+	chapterService    ChapterService
+	paragraphService  ParagraphService
 }
 
-func NewDocUsecase(typeService TypeService, subTypeService SubTypeService, docService DocService, chapterService ChapterService, paragraphService ParagraphService) *docUsecase {
-	return &docUsecase{typeService: typeService, subTypeService: subTypeService, docService: docService, chapterService: chapterService, paragraphService: paragraphService}
+func NewDocUsecase(typeService TypeService, subTypeService SubTypeService, docService DocService, subTypeDocService SubTypeDocService, chapterService ChapterService, paragraphService ParagraphService) *docUsecase {
+	return &docUsecase{typeService: typeService, subTypeService: subTypeService, docService: docService, subTypeDocService: subTypeDocService, chapterService: chapterService, paragraphService: paragraphService}
 }
 func (u *docUsecase) GetAll(ctx context.Context) (docs []*pb.WriterDoc, err error) {
 	return u.docService.GetAll(ctx)
@@ -53,7 +58,12 @@ func (u *docUsecase) Create(ctx context.Context, doc *pb.CreateDocRequest) (uint
 	if err != nil {
 		return 0, err
 	}
-	return u.docService.Create(ctx, doc, subTypeID)
+	docID, err := u.docService.Create(ctx, doc)
+	if err != nil {
+		return 0, err
+	}
+	u.subTypeDocService.Create(ctx, subTypeID, docID)
+	return docID, err
 }
 func (u *docUsecase) Delete(ctx context.Context, docID uint64) error {
 	// get all doc`s chapters

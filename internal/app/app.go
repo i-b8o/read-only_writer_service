@@ -43,16 +43,18 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	typeAdapter := postgressql.NewTypeStorage(pgClient)
 	subTypeAdapter := postgressql.NewSubTypeStorage(pgClient)
 	docAdapter := postgressql.NewDocStorage(pgClient)
+	subTypeDocAdapter := postgressql.NewSubTypeDocStorage(pgClient)
 	chapterAdapter := postgressql.NewChapterStorage(pgClient)
 	paragraphAdapter := postgressql.NewParagraphStorage(pgClient)
 
 	typeService := service.NewTypeService(typeAdapter)
 	subTypeService := service.NewSubTypeService(subTypeAdapter)
 	docService := service.NewDocService(docAdapter)
+	subTypeDocService := service.NewSubTypeDocService(subTypeDocAdapter)
 	chapterService := service.NewChapterService(chapterAdapter)
 	paragraphService := service.NewParagraphService(paragraphAdapter)
 
-	docUsecase := doc_usecase.NewDocUsecase(typeService, subTypeService, docService, chapterService, paragraphService)
+	docUsecase := doc_usecase.NewDocUsecase(typeService, subTypeService, docService, subTypeDocService, chapterService, paragraphService)
 
 	docGrpcService := doc_controller.NewWriterDocGrpcController(docUsecase, logger)
 	chapterGrpcService := chapter_controller.NewWriterChapterGrpcController(chapterService, logger)

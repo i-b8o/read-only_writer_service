@@ -7,7 +7,7 @@ import (
 )
 
 type DocStorage interface {
-	Create(ctx context.Context, doc *pb.CreateDocRequest, subtype_id uint64) (uint64, error)
+	Create(ctx context.Context, doc *pb.CreateDocRequest) (uint64, error)
 	Delete(ctx context.Context, docID uint64) error
 	GetAll(ctx context.Context) (docs []*pb.WriterDoc, err error)
 }
@@ -20,8 +20,8 @@ func NewDocService(storage DocStorage) *docService {
 	return &docService{storage: storage}
 }
 
-func (s *docService) Create(ctx context.Context, doc *pb.CreateDocRequest, subtype_id uint64) (uint64, error) {
-	return s.storage.Create(ctx, doc, subtype_id)
+func (s *docService) Create(ctx context.Context, doc *pb.CreateDocRequest) (uint64, error) {
+	return s.storage.Create(ctx, doc)
 }
 func (s *docService) Delete(ctx context.Context, docID uint64) error {
 	return s.storage.Delete(ctx, docID)
