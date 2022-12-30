@@ -97,9 +97,9 @@ func (ps *paragraphStorage) DeleteForChapter(ctx context.Context, chapterID uint
 }
 
 // Delete
-func (ps *paragraphStorage) GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error) {
-	const sql = `SELECT content FROM paragraph WHERE id=$1`
-	row := ps.client.QueryRow(ctx, sql, paragraphID)
+func (ps *paragraphStorage) GetOne(ctx context.Context, paragraphID, chapterID uint64) (*pb.WriterParagraph, error) {
+	const sql = `SELECT content FROM paragraph WHERE id=$1 AND c_id=$2`
+	row := ps.client.QueryRow(ctx, sql, paragraphID, chapterID)
 	paragraph := &pb.WriterParagraph{}
 	err := row.Scan(&paragraph.Content)
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 type ParagraphService interface {
 	CreateAll(ctx context.Context, paragraphs []*pb.WriterParagraph) error
 	UpdateOne(ctx context.Context, content string, paragraphID uint64) error
-	GetOne(ctx context.Context, paragraphID uint64) (*pb.WriterParagraph, error)
+	GetOne(ctx context.Context, paragraphID, chapterID uint64) (*pb.WriterParagraph, error)
 	DeleteForChapter(ctx context.Context, chapterID uint64) error
 	GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error)
 }
@@ -44,7 +44,8 @@ func (c *WriterParagraphGrpcController) Update(ctx context.Context, req *pb.Upda
 
 func (c *WriterParagraphGrpcController) GetOne(ctx context.Context, req *pb.GetOneParagraphRequest) (*pb.GetOneParagraphResponse, error) {
 	ID := req.GetID()
-	paragraphs, err := c.paragraphService.GetOne(ctx, ID)
+	chapterID := req.GetChapterID()
+	paragraphs, err := c.paragraphService.GetOne(ctx, ID, chapterID)
 	if err != nil {
 		return &pb.GetOneParagraphResponse{}, err
 	}
