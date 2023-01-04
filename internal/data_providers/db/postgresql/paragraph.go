@@ -66,9 +66,12 @@ func (ps *paragraphStorage) CreateAll(ctx context.Context, paragraphs []*pb.Writ
 	return nil
 }
 
-func (ps *paragraphStorage) UpdateOne(ctx context.Context, content string, paragraphID uint64) error {
-	const sql = `UPDATE "paragraph" SET content = $1 WHERE id = $2 RETURNING "id"`
-	row := ps.client.QueryRow(ctx, sql, content, paragraphID)
+func (ps *paragraphStorage) UpdateOne(ctx context.Context, content string, paragraphID, chapterID uint64) error {
+	if chapterID <= 0 {
+		return fmt.Errorf("chapter id error")
+	}
+	const sql = `UPDATE "paragraph" SET content = $1 WHERE id = $2 AND c_id = $3 RETURNING "id"`
+	row := ps.client.QueryRow(ctx, sql, content, paragraphID, chapterID)
 	var ID uint64
 
 	err := row.Scan(&ID)
@@ -110,7 +113,7 @@ func (ps *paragraphStorage) GetOne(ctx context.Context, paragraphID, chapterID u
 }
 
 func (ps *paragraphStorage) GetWithHrefs(ctx context.Context, chapterID uint64) ([]*pb.WriterParagraph, error) {
-	const sql = `SELECT id, content FROM "paragraph" WHERE c_id = $1 AND has_links=true`
+	const sql = `SELECT id, c_id, content FROM "paragraph" WHERE c_id = $1 AND has_links=true`
 
 	var paragraphs []*pb.WriterParagraph
 
@@ -124,7 +127,7 @@ func (ps *paragraphStorage) GetWithHrefs(ctx context.Context, chapterID uint64) 
 	for rows.Next() {
 		paragraph := pb.WriterParagraph{}
 		if err = rows.Scan(
-			&paragraph.ID, &paragraph.Content,
+			&paragraph.ID, &paragraph.ChapterID, &paragraph.Content,
 		); err != nil {
 			return nil, err
 		}
